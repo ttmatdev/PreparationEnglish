@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Slovíčka — 2AJ211 + 2AJ212</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=JetBrains+Mono:wght@400;500&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0e17;
+    --surface: #1a1927;
+    --surface2: #242335;
+    --accent: #e8c547;
+    --accent2: #7c6af5;
+    --accent3: #f25f5c;
+    --text: #fffffe;
+    --text-muted: #a7a9be;
+    --border: rgba(255,255,255,0.08);
+    --success: #6bcb77;
+    --error: #f25f5c;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Lato', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* BG decoration */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -200px; right: -200px;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(124,106,245,0.15) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: -200px; left: -200px;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(232,197,71,0.1) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* HEADER */
+  header {
+    position: relative; z-index: 10;
+    padding: 32px 40px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 16px;
+    background: rgba(15,14,23,0.8);
+    backdrop-filter: blur(12px);
+    position: sticky; top: 0;
+  }
+
+  .logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-weight: 900;
+    letter-spacing: -0.5px;
+  }
+  .logo span { color: var(--accent); }
+
+  .stats-bar {
+    display: flex; gap: 20px; align-items: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+  }
+  .stats-bar strong { color: var(--accent); font-size: 1rem; }
+
+  /* NAV */
+  .nav {
+    position: relative; z-index: 10;
+    display: flex; gap: 8px; flex-wrap: wrap;
+    padding: 20px 40px;
+    background: rgba(15,14,23,0.6);
+  }
+
+  .nav-btn {
+    padding: 10px 22px;
+    border-radius: 50px;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    font-family: 'Lato', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+  .nav-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .nav-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--bg);
+  }
+
+  /* SECTIONS */
+  .section { display: none; padding: 32px 40px; position: relative; z-index: 5; }
+  .section.active { display: block; }
+
+  /* FILTER BAR */
+  .filter-bar {
+    display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 28px;
+    align-items: center;
+  }
+  .filter-bar select, .filter-bar input {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    color: var(--text);
+    padding: 9px 16px;
+    border-radius: 8px;
+    font-family: 'Lato', sans-serif;
+    font-size: 0.88rem;
+    outline: none;
+    cursor: pointer;
+  }
+  .filter-bar input { min-width: 220px; }
+  .filter-bar input:focus, .filter-bar select:focus { border-color: var(--accent); }
+  .filter-bar label { color: var(--text-muted); font-size: 0.85rem; }
+
+  /* ====== FLASHCARDS ====== */
+  #flashcard-area {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 24px;
+  }
+
+  .card-counter {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+
+  .progress-bar-wrap {
+    width: 100%; max-width: 600px;
+    height: 4px; background: var(--surface2);
+    border-radius: 2px; overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%; background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.3s ease;
+  }
+
+  .flashcard-scene {
+    width: 100%; max-width: 600px;
+    height: 320px;
+    perspective: 1200px;
+    cursor: pointer;
+  }
+  .flashcard-inner {
+    width: 100%; height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .flashcard-scene.flipped .flashcard-inner { transform: rotateY(180deg); }
+
+  .flashcard-front, .flashcard-back {
+    position: absolute; width: 100%; height: 100%;
+    backface-visibility: hidden;
+    border-radius: 20px;
+    padding: 40px;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    text-align: center;
+    border: 1.5px solid var(--border);
+  }
+  .flashcard-front {
+    background: var(--surface);
+    background-image: linear-gradient(135deg, rgba(124,106,245,0.08) 0%, transparent 60%);
+  }
+  .flashcard-back {
+    background: var(--surface2);
+    background-image: linear-gradient(135deg, rgba(232,197,71,0.08) 0%, transparent 60%);
+    transform: rotateY(180deg);
+  }
+
+  .card-unit-badge {
+    position: absolute; top: 18px; left: 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--accent2);
+    background: rgba(124,106,245,0.15);
+    padding: 3px 10px; border-radius: 20px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .card-hint {
+    position: absolute; bottom: 18px; right: 20px;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    opacity: 0.6;
+  }
+
+  .card-term {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 12px;
+    color: var(--text);
+  }
+  .card-pos {
+    font-size: 0.75rem;
+    color: var(--accent2);
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+  .card-definition {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+  .card-translation {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .card-controls {
+    display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;
+  }
+
+  .btn {
+    padding: 12px 28px;
+    border-radius: 50px;
+    border: none;
+    font-family: 'Lato', sans-serif;
+    font-weight: 700;
+    font-size: 0.88rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+  .btn-primary { background: var(--accent); color: var(--bg); }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(232,197,71,0.3); }
+  .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text-muted); }
+  .btn-outline:hover { border-color: var(--text-muted); color: var(--text); }
+  .btn-success { background: var(--success); color: var(--bg); }
+  .btn-error { background: var(--error); color: #fff; }
+  .btn-sm { padding: 8px 18px; font-size: 0.8rem; }
+
+  .card-direction {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ====== QUIZ ====== */
+  #quiz-area {
+    max-width: 660px; margin: 0 auto;
+    display: flex; flex-direction: column; gap: 24px;
+  }
+
+  .quiz-question {
+    background: var(--surface);
+    border-radius: 20px;
+    padding: 36px;
+    border: 1.5px solid var(--border);
+    background-image: linear-gradient(135deg, rgba(124,106,245,0.06) 0%, transparent 60%);
+  }
+  .quiz-label {
+    font-size: 0.72rem;
+    color: var(--accent2);
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .quiz-term {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .quiz-def {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+
+  .quiz-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  @media (max-width: 500px) { .quiz-options { grid-template-columns: 1fr; } }
+
+  .quiz-option {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    cursor: pointer;
+    font-family: 'Lato', sans-serif;
+    font-size: 0.92rem;
+    color: var(--text);
+    text-align: left;
+    transition: all 0.18s;
+    line-height: 1.4;
+  }
+  .quiz-option:hover:not(:disabled) { border-color: var(--accent2); background: rgba(124,106,245,0.08); }
+  .quiz-option.correct { border-color: var(--success); background: rgba(107,203,119,0.12); color: var(--success); }
+  .quiz-option.wrong { border-color: var(--error); background: rgba(242,95,92,0.12); color: var(--error); }
+  .quiz-option:disabled { cursor: default; }
+
+  .quiz-score {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    text-align: center;
+  }
+  .quiz-score strong { color: var(--accent); font-size: 1.1rem; }
+
+  .quiz-result {
+    background: var(--surface);
+    border-radius: 20px;
+    padding: 40px;
+    text-align: center;
+    border: 1.5px solid var(--border);
+  }
+  .quiz-result h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.2rem;
+    margin-bottom: 12px;
+  }
+  .quiz-result .score-big {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--accent);
+    display: block;
+    margin: 16px 0;
+  }
+
+  /* ====== WRITE MODE ====== */
+  #write-area {
+    max-width: 600px; margin: 0 auto;
+    display: flex; flex-direction: column; gap: 24px;
+  }
+  .write-card {
+    background: var(--surface);
+    border-radius: 20px;
+    padding: 36px;
+    border: 1.5px solid var(--border);
+  }
+  .write-question { font-size: 0.78rem; color: var(--accent2); font-family: 'JetBrains Mono', monospace; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 12px; }
+  .write-term { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; margin-bottom: 8px; }
+  .write-hint { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 20px; line-height: 1.5; }
+  .write-input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+    font-family: 'Lato', sans-serif;
+    font-size: 1rem;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .write-input:focus { border-color: var(--accent2); }
+  .write-input.correct-input { border-color: var(--success); }
+  .write-input.wrong-input { border-color: var(--error); }
+  .write-feedback {
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    display: none;
+  }
+  .write-feedback.show { display: block; }
+  .write-feedback.correct { background: rgba(107,203,119,0.12); color: var(--success); border: 1px solid var(--success); }
+  .write-feedback.wrong { background: rgba(242,95,92,0.12); color: var(--error); border: 1px solid var(--error); }
+
+  /* ====== BROWSE ====== */
+  #browse-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+  }
+  .browse-card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .browse-card:hover { border-color: rgba(232,197,71,0.3); transform: translateY(-2px); }
+  .browse-term { font-family: 'Playfair Display', serif; font-weight: 700; font-size: 1.1rem; margin-bottom: 6px; }
+  .browse-translation { color: var(--accent); font-size: 0.88rem; font-weight: 700; margin-bottom: 8px; }
+  .browse-def { color: var(--text-muted); font-size: 0.8rem; line-height: 1.5; }
+  .browse-unit-tag {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--accent2);
+    background: rgba(124,106,245,0.15);
+    padding: 2px 8px; border-radius: 20px;
+    margin-bottom: 10px;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+  }
+
+  /* SECTION TITLE */
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
+    font-weight: 900;
+    margin-bottom: 6px;
+  }
+  .section-sub { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 28px; }
+
+  /* MATCHING GAME */
+  #match-area { max-width: 800px; }
+  .match-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .match-col { display: flex; flex-direction: column; gap: 10px; }
+  .match-card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+    cursor: pointer;
+    font-size: 0.88rem;
+    transition: all 0.18s;
+    line-height: 1.4;
+  }
+  .match-card:hover:not(.matched):not(.selected) { border-color: var(--accent2); }
+  .match-card.selected { border-color: var(--accent); background: rgba(232,197,71,0.08); }
+  .match-card.matched { border-color: var(--success); background: rgba(107,203,119,0.1); color: var(--success); cursor: default; }
+  .match-card.wrong-flash { border-color: var(--error); background: rgba(242,95,92,0.1); animation: flash 0.4s ease; }
+  @keyframes flash { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+  .match-score { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px; }
+  .match-score strong { color: var(--accent); }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 3px; }
+
+  /* Fade in animation */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .section.active { animation: fadeInUp 0.3s ease; }
+
+  .dir-toggle {
+    display: flex; gap: 6px; align-items: center;
+  }
+  .dir-toggle button {
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: all 0.18s;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .dir-toggle button.active { background: var(--accent2); border-color: var(--accent2); color: #fff; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">2AJ<span>211</span> + 2AJ<span>212</span></div>
+  <div class="stats-bar">
+    <div><strong id="total-count">—</strong> slovíček</div>
+    <div id="session-score" style="display:none">Session: <strong id="sess-correct">0</strong>/<strong id="sess-total">0</strong></div>
+  </div>
+</header>
+
+<nav class="nav">
+  <button class="nav-btn active" onclick="showSection('flashcards')">📇 Kartičky</button>
+  <button class="nav-btn" onclick="showSection('quiz')">🎯 Quiz</button>
+  <button class="nav-btn" onclick="showSection('write')">✍️ Psaní</button>
+  <button class="nav-btn" onclick="showSection('match')">🔗 Přiřazování</button>
+  <button class="nav-btn" onclick="showSection('browse')">📖 Procházet</button>
+</nav>
+
+<!-- ===== FLASHCARDS ===== -->
+<section id="flashcards" class="section active">
+  <div class="section-title">Kartičky</div>
+  <div class="section-sub">Klikni na kartičku pro zobrazení překladu/definice</div>
+
+  <div class="filter-bar">
+    <label>Téma:</label>
+    <select id="fc-unit" onchange="resetFlashcards()">
+      <option value="all">Vše</option>
+      <option value="Management">Management & Motivation</option>
+      <option value="Cross">Cross-cultural Communication</option>
+      <option value="Recruitment">Recruitment & Employment</option>
+      <option value="Marketing">Marketing & Branding</option>
+      <option value="Banking">Banking & Finance</option>
+      <option value="Government">Government & Taxation</option>
+      <option value="Trade">International Trade</option>
+    </select>
+    <div class="dir-toggle">
+      <button id="dir-en" class="active" onclick="setDirection('en')">EN → CZ</button>
+      <button id="dir-cz" onclick="setDirection('cz')">CZ → EN</button>
+      <button id="dir-def" onclick="setDirection('def')">DEF → EN</button>
+    </div>
+    <button class="btn btn-outline btn-sm" onclick="shuffleCards()">🔀 Zamíchat</button>
+  </div>
+
+  <div id="flashcard-area">
+    <div class="card-counter"><span id="card-current">1</span> / <span id="card-total">—</span></div>
+    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="fc-progress"></div></div>
+
+    <div class="flashcard-scene" id="fc-scene" onclick="flipCard()">
+      <div class="flashcard-inner" id="fc-inner">
+        <div class="flashcard-front" id="fc-front">
+          <span class="card-unit-badge" id="fc-unit-badge">Unit</span>
+          <div class="card-pos" id="fc-pos"></div>
+          <div class="card-term" id="fc-front-text">—</div>
+          <span class="card-hint">klikni pro otočení</span>
+        </div>
+        <div class="flashcard-back" id="fc-back">
+          <div class="card-definition" id="fc-back-def"></div>
+          <div class="card-translation" id="fc-back-text">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-controls">
+      <button class="btn btn-outline" onclick="prevCard()">← Zpět</button>
+      <button class="btn btn-primary" onclick="nextCard()">Další →</button>
+    </div>
+    <div class="card-direction" id="fc-dir-label">Zobrazuji: anglický termín → překlad</div>
+  </div>
+</section>
+
+<!-- ===== QUIZ ===== -->
+<section id="quiz" class="section">
+  <div class="section-title">Quiz</div>
+  <div class="section-sub">Vyber správnou odpověď ze čtyř možností</div>
+
+  <div class="filter-bar">
+    <label>Téma:</label>
+    <select id="quiz-unit" onchange="startQuiz()">
+      <option value="all">Vše</option>
+      <option value="Management">Management & Motivation</option>
+      <option value="Cross">Cross-cultural Communication</option>
+      <option value="Recruitment">Recruitment & Employment</option>
+      <option value="Marketing">Marketing & Branding</option>
+      <option value="Banking">Banking & Finance</option>
+      <option value="Government">Government & Taxation</option>
+      <option value="Trade">International Trade</option>
+    </select>
+    <label>Typ otázky:</label>
+    <select id="quiz-type" onchange="startQuiz()">
+      <option value="en2cz">EN termín → CZ překlad</option>
+      <option value="cz2en">CZ překlad → EN termín</option>
+      <option value="def2en">Definice → EN termín</option>
+    </select>
+    <button class="btn btn-primary btn-sm" onclick="startQuiz()">🔄 Restart</button>
+  </div>
+
+  <div id="quiz-area"></div>
+</section>
+
+<!-- ===== WRITE ===== -->
+<section id="write" class="section">
+  <div class="section-title">Psaní</div>
+  <div class="section-sub">Napiš správný překlad nebo termín</div>
+
+  <div class="filter-bar">
+    <label>Téma:</label>
+    <select id="write-unit" onchange="startWrite()">
+      <option value="all">Vše</option>
+      <option value="Management">Management & Motivation</option>
+      <option value="Cross">Cross-cultural Communication</option>
+      <option value="Recruitment">Recruitment & Employment</option>
+      <option value="Marketing">Marketing & Branding</option>
+      <option value="Banking">Banking & Finance</option>
+      <option value="Government">Government & Taxation</option>
+      <option value="Trade">International Trade</option>
+    </select>
+    <div class="dir-toggle">
+      <button id="wdir-en" class="active" onclick="setWriteDir('en')">EN → CZ</button>
+      <button id="wdir-cz" onclick="setWriteDir('cz')">CZ → EN</button>
+    </div>
+    <button class="btn btn-outline btn-sm" onclick="startWrite()">🔀 Nová sada</button>
+  </div>
+  <div id="write-area"></div>
+</section>
+
+<!-- ===== MATCHING ===== -->
+<section id="match" class="section">
+  <div class="section-title">Přiřazování</div>
+  <div class="section-sub">Spoj anglický termín s českým překladem</div>
+
+  <div class="filter-bar">
+    <label>Téma:</label>
+    <select id="match-unit" onchange="startMatch()">
+      <option value="all">Vše</option>
+      <option value="Management">Management & Motivation</option>
+      <option value="Cross">Cross-cultural Communication</option>
+      <option value="Recruitment">Recruitment & Employment</option>
+      <option value="Marketing">Marketing & Branding</option>
+      <option value="Banking">Banking & Finance</option>
+      <option value="Government">Government & Taxation</option>
+      <option value="Trade">International Trade</option>
+    </select>
+    <button class="btn btn-primary btn-sm" onclick="startMatch()">🔄 Nová hra</button>
+  </div>
+  <div id="match-area"></div>
+</section>
+
+<!-- ===== BROWSE ===== -->
+<section id="browse" class="section">
+  <div class="section-title">Procházet</div>
+  <div class="section-sub">Všechna slovíčka na jednom místě</div>
+
+  <div class="filter-bar">
+    <input type="text" id="browse-search" placeholder="🔍 Hledat termín..." oninput="renderBrowse()">
+    <select id="browse-unit" onchange="renderBrowse()">
+      <option value="all">Vše</option>
+      <option value="Management">Management & Motivation</option>
+      <option value="Cross">Cross-cultural Communication</option>
+      <option value="Recruitment">Recruitment & Employment</option>
+      <option value="Marketing">Marketing & Branding</option>
+      <option value="Banking">Banking & Finance</option>
+      <option value="Government">Government & Taxation</option>
+      <option value="Trade">International Trade</option>
+    </select>
+  </div>
+  <div id="browse-grid"></div>
+</section>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const WORDS = [
+  // ---- Management & Motivation (2AJ211) ----
+  {term:"Accounting department",def:"a department responsible for recording the company's financial transactions",tr:"účtárna",unit:"Management"},
+  {term:"Area manager",def:"a person responsible for the company's operations in a certain area",tr:"oblastní manažer",unit:"Management"},
+  {term:"Board of Directors",def:"governing body of an incorporated firm whose members are elected by stockholders to govern the firm",tr:"správní rada, představenstvo",unit:"Management"},
+  {term:"Bonus",def:"money added to someone's wages, especially as a reward for good work",tr:"prémie, odměna",unit:"Management"},
+  {term:"Branch manager",def:"a person responsible for a local office of a large company (e.g. a bank)",tr:"manažer pobočky",unit:"Management"},
+  {term:"CEO / Managing Director",def:"the person with the most authority in a large company; someone who is in charge of a large company or organisation",tr:"výkonný ředitel, generální ředitel",unit:"Management"},
+  {term:"CFO / Financial Director",def:"the person responsible for the financial management of a company",tr:"finanční ředitel",unit:"Management"},
+  {term:"Chain of command",def:"a system in an organisation by which decisions are made and passed from people at the top to people lower down",tr:"řetězec velení, systém subordinace",unit:"Management"},
+  {term:"Chairman",def:"someone who is in charge of a meeting or directs the work of a committee or an organisation",tr:"předseda, předsedající",unit:"Management"},
+  {term:"CMO / Marketing Director",def:"the person responsible for marketing — finding out what the customers want and providing it to them",tr:"marketingový ředitel",unit:"Management"},
+  {term:"Commission",def:"an extra amount of money paid to a person or organisation according to the value of goods they sold",tr:"provize",unit:"Management"},
+  {term:"COO / Operations Director",def:"the person responsible for how the company is run on a day-to-day basis",tr:"provozní ředitel",unit:"Management"},
+  {term:"Crew leader",def:"a person responsible for a group of people who work together (e.g. on a plane, ship, etc.)",tr:"vedoucí skupiny/týmu/štábu",unit:"Management"},
+  {term:"Department manager",def:"a person responsible for one part of a company that deals with a particular area of work",tr:"manažer oddělení",unit:"Management"},
+  {term:"Division manager",def:"a person responsible for one division, i.e. one (usually large) separate part of a company",tr:"manažer divize",unit:"Management"},
+  {term:"(Executive) director",def:"someone who controls or manages a company",tr:"(výkonný) ředitel",unit:"Management"},
+  {term:"Finance department",def:"a department responsible for managing a company's money",tr:"finanční oddělení",unit:"Management"},
+  {term:"Foreman",def:"someone in charge of a group of workers, e.g. in a factory",tr:"mistr, vedoucí dílny",unit:"Management"},
+  {term:"Human Resources (HR) department",def:"a department responsible for recruitment, training, performance appraisals, rewarding and dismissal of employees",tr:"personální oddělení, oddělení lidských zdrojů",unit:"Management"},
+  {term:"Job description",def:"an official list of the work and responsibilities that you have in your job",tr:"popis práce (soupis pracovních povinností)",unit:"Management"},
+  {term:"Job rotation",def:"the practice of regularly changing the person who does a particular job",tr:"rotace pracovníků",unit:"Management"},
+  {term:"Job security",def:"not being in danger of losing your job",tr:"jistota zaměstnání",unit:"Management"},
+  {term:"Management",def:"1. the act of organising and coordinating activities of a business to achieve objectives 2. a group of people who run and control a business",tr:"1. řízení 2. management, vedení firmy",unit:"Management"},
+  {term:"Marketing department",def:"a department responsible for finding out what customers want and selling products and services effectively",tr:"marketingové oddělení",unit:"Management"},
+  {term:"Morale",def:"the level of confidence and positive feelings that people have, especially people who work together in the same team",tr:"morálka, nálada (týmu)",unit:"Management"},
+  {term:"Non-executive director",def:"one of the directors of a company who gives advice but does not make decisions about how the company is run",tr:"ředitel s poradní funkcí, bez výkonné pravomoci",unit:"Management"},
+  {term:"Office manager",def:"a person who is responsible for the organisation of the work in an office",tr:"vedoucí kanceláře",unit:"Management"},
+  {term:"Pay",def:"the money that you earn by working",tr:"plat",unit:"Management"},
+  {term:"Performance appraisal / Performance review",def:"a meeting between an employee and a manager to discuss the quality of the employee's work and areas for future progress",tr:"hodnocení výkonu (práce zaměstnance)",unit:"Management"},
+  {term:"Perks / Employee benefits / Fringe benefits",def:"things that you get legally from your work in addition to your pay, such as goods, meals, or the use of a car",tr:"zaměstnanecké výhody",unit:"Management"},
+  {term:"Personal assistant",def:"someone who works for one person (often a senior manager) and helps them do their job",tr:"osobní asistent(ka)",unit:"Management"},
+  {term:"Personnel / Staff / Employees",def:"the people who work for a company or an organisation",tr:"personál, zaměstnanci",unit:"Management"},
+  {term:"Plant manager",def:"the head of a factory or other place where goods are manufactured or resources such as energy are produced",tr:"manažer závodu",unit:"Management"},
+  {term:"President",def:"the person who has the highest position in a company or organisation (esp. AmE)",tr:"prezident, předseda",unit:"Management"},
+  {term:"Production department / Operations",def:"a department responsible for turning inputs (e.g. raw materials) into outputs (e.g. finished products) smoothly and efficiently",tr:"výrobní oddělení",unit:"Management"},
+  {term:"Profit sharing",def:"a system in which employees receive a share of the net profits of the business",tr:"podíl na zisku",unit:"Management"},
+  {term:"Promotion",def:"a move to a more important job or position in a company or organisation",tr:"povýšení",unit:"Management"},
+  {term:"Regional manager",def:"a manager responsible for coordinating the company's operations in a certain region",tr:"regionální manažer",unit:"Management"},
+  {term:"Remuneration",def:"an amount of money that is paid to somebody for the work they have done",tr:"odměna, odměňování",unit:"Management"},
+  {term:"Research & Development (R&D) department",def:"a department responsible for discovering solutions to existing problems or creating new or improved products",tr:"výzkum a vývoj",unit:"Management"},
+  {term:"Salary",def:"money that you receive as payment from the organisation you work for, usually paid every month (typical of white collar workers)",tr:"(stálý) plat",unit:"Management"},
+  {term:"Sales department",def:"a department that sells a company's products",tr:"oddělení prodeje, obchodní oddělení",unit:"Management"},
+  {term:"Sanction",def:"a form of punishment that can be used if someone disobeys a rule or law or does not do their job well",tr:"sankce, postih",unit:"Management"},
+  {term:"Secretary",def:"someone who works in an office typing letters, keeping records, answering telephone calls, arranging meetings",tr:"sekretář(ka)",unit:"Management"},
+  {term:"Section leader",def:"a person responsible for one part of an organisation",tr:"vedoucí sekce/oddělení",unit:"Management"},
+  {term:"Shift supervisor",def:"a person responsible for a group of workers who work at a particular time",tr:"vedoucí směny",unit:"Management"},
+  {term:"Social club",def:"a club where its members can go to spend time, talk, drink, etc. with other members",tr:"společenský klub",unit:"Management"},
+  {term:"Store manager",def:"a person responsible for a store — a place where people buy things or a place where things are kept",tr:"vedoucí prodejny/skladu",unit:"Management"},
+  {term:"Subordinate",def:"someone who has a lower position and less authority than you",tr:"podřízený",unit:"Management"},
+  {term:"Superior",def:"someone who has a higher rank or position than you",tr:"nadřízený",unit:"Management"},
+  {term:"Supervisor",def:"a person who is in charge of a group of people or an area of work and makes sure that the work is done correctly",tr:"vedoucí, dohled",unit:"Management"},
+  {term:"Team building / Teambuilding",def:"the process of getting employees to work together well and communicate effectively",tr:"budování/utváření týmu",unit:"Management"},
+  {term:"Wage",def:"money you earn that is paid according to the number of hours, days, or weeks that you work (typical for blue collar workers)",tr:"mzda",unit:"Management"},
+  {term:"Workforce / Labour force",def:"all the people who work in a particular industry or company",tr:"pracující, zaměstnanci (všichni zaměstnanci dané firmy/odvětví)",unit:"Management"},
+
+  // ---- Cross-cultural Communication (2AJ211) ----
+  {term:"Assumption",def:"a belief or feeling that something is true or that something will happen, although there is no proof",tr:"předpoklad, domněnka",unit:"Cross"},
+  {term:"Collectivist",def:"emphasising the collective rather than individual action or identity",tr:"kolektivistický, podřizující se kolektivu",unit:"Cross"},
+  {term:"Cross-cultural differences",def:"differences that arise when people from different cultures work and live together",tr:"rozdíly/odlišnosti mezi kulturami",unit:"Cross"},
+  {term:"Cross-cultural skills",def:"competences that refer to the knowledge and motivation that enable individuals to adapt effectively in cross-cultural environments",tr:"dovednosti, které nám pomohou správně se chovat a řešit situace vzniklé střetem mezi různými kulturami",unit:"Cross"},
+  {term:"Cross-cultural training",def:"training that will teach employees to adapt effectively in cross-cultural environments",tr:"trénink dovedností, které nám pomohou správně se chovat a řešit situace vzniklé střetem mezi různými kulturami",unit:"Cross"},
+  {term:"Cultural awareness",def:"understanding of the differences between oneself and people from other countries or other backgrounds",tr:"kulturní povědomí",unit:"Cross"},
+  {term:"Cultural dimensions",def:"a set of preferences that distinguish one country from another",tr:"kulturní dimenze (úrovně)",unit:"Cross"},
+  {term:"Diverse workplace",def:"a workplace that is composed of employees with varying characteristics including religious and political beliefs, gender, ethnicity, education, etc.",tr:"rozmanité pracoviště (kde spolupracují lidé pocházející z odlišných kulturních zázemí)",unit:"Cross"},
+  {term:"Etiquette",def:"the formal rules of correct or polite behaviour in society or among members of a particular profession",tr:"etiketa, pravidla chování",unit:"Cross"},
+  {term:"Feminine",def:"having the qualities or appearance considered to be typical of women; connected with women",tr:"mající ženské rysy chování a osobnosti",unit:"Cross"},
+  {term:"Individualistic",def:"following the belief that individual people in society should have the right to make their own decisions, rather than be controlled by the government or any other institution",tr:"individualistický, samostatný, jednotlivý, osobitý",unit:"Cross"},
+  {term:"Masculine",def:"having the qualities or appearance considered to be typical of men; connected with or like men",tr:"mající mužské rysy chování a osobnosti",unit:"Cross"},
+  {term:"Negotiate",def:"to try to reach an agreement by formal discussion",tr:"vyjednávat",unit:"Cross"},
+  {term:"Non-verbal communication",def:"communication which includes gestures, facial expressions, and body positions (known collectively as 'body language'), as well as unspoken understandings",tr:"nonverbální komunikace",unit:"Cross"},
+  {term:"Stereotype",def:"a fixed idea or image that many people have of a particular type of person or thing, but which is often not true in reality",tr:"stereotyp; jednotvárný, ustálený, navyklý vzorec chování a myšlení",unit:"Cross"},
+
+  // ---- Recruitment & Employment (2AJ212) ----
+  {term:"Cyclical unemployment",def:"unemployment resulting from fluctuations in economic activity",tr:"cyklická nezaměstnanost",unit:"Recruitment"},
+  {term:"Covering letter / Cover letter",def:"a letter containing extra information that you send with a CV/resume",tr:"průvodní/motivační dopis",unit:"Recruitment"},
+  {term:"Frictional unemployment",def:"unemployment caused by new entrants to the job market and people who have left their jobs to look for and find other jobs",tr:"dočasná nezaměstnanost",unit:"Recruitment"},
+  {term:"Headhunter",def:"a third-party recruiter who works on behalf of an employer and seeks out candidates for executive and professional positions",tr:"lovec mozků",unit:"Recruitment"},
+  {term:"Labour force / Workforce",def:"all people of working age, both employed and unemployed",tr:"pracovní síla",unit:"Recruitment"},
+  {term:"Outsource",def:"to contract out a business process to another party",tr:"zadávat subdodavatelské zakázky",unit:"Recruitment"},
+  {term:"Payroll",def:"a list of all financial records of salaries for an employee, wages, bonuses and deductions",tr:"výplatní listina",unit:"Recruitment"},
+  {term:"Promotion (recruitment)",def:"a move to a more senior position in a company or organisation, decided upon by the employee's superiors",tr:"povýšení",unit:"Recruitment"},
+  {term:"Recruitment",def:"the overall process of attracting, selecting and appointing suitable candidates for jobs within an organisation",tr:"nábor, přijímání pracovních sil",unit:"Recruitment"},
+  {term:"Recruitment agency / Employment agency",def:"a business that finds employers or employees for those seeking them",tr:"personální agentura",unit:"Recruitment"},
+  {term:"Redundancy pay",def:"money paid to workers when they are made redundant",tr:"odstupné",unit:"Recruitment"},
+  {term:"Shortlist",def:"a list of candidates for a job, prize, award, political position, etc., that has been reduced from a longer list",tr:"užší seznam",unit:"Recruitment"},
+  {term:"Structural unemployment",def:"unemployment resulting from changes in the economy itself",tr:"strukturální nezaměstnanost",unit:"Recruitment"},
+  {term:"Unemployment rate",def:"the percentage of people in the labour force who cannot find employment but are looking for it",tr:"míra nezaměstnanosti",unit:"Recruitment"},
+  {term:"Vacancy",def:"a job position that is available to be filled",tr:"volné místo",unit:"Recruitment"},
+
+  // ---- Marketing & Branding (2AJ212) ----
+  {term:"Above the line advertising",def:"advertising in the mass media",tr:"nadlinková/mediální reklama",unit:"Marketing"},
+  {term:"Advertising",def:"a form of marketing communication used to call public attention to a product, especially by paid announcements",tr:"reklama",unit:"Marketing"},
+  {term:"Advertising budget",def:"money planned for spending on advertising",tr:"rozpočet na reklamu",unit:"Marketing"},
+  {term:"Advertising campaign",def:"an organised course of action to promote a product",tr:"reklamní kampaň",unit:"Marketing"},
+  {term:"Below the line advertising",def:"advertising by means such as direct mail, email, promotional events, etc.",tr:"podlinková reklama",unit:"Marketing"},
+  {term:"Brand",def:"a distinguishing symbol, mark, logo, name, word, sentence or a combination that companies use to distinguish their product from others",tr:"obchodní značka",unit:"Marketing"},
+  {term:"Brand extension",def:"a common method of launching a new product by using an existing brand name on a new product in a different category",tr:"rozšiřování značky",unit:"Marketing"},
+  {term:"Brand image",def:"the impression in the consumers' mind of a brand's total personality",tr:"image značky",unit:"Marketing"},
+  {term:"Brand loyalty",def:"where a person buys products from the same manufacturer repeatedly rather than from other suppliers",tr:"věrnost značce",unit:"Marketing"},
+  {term:"Brand recognition",def:"the extent to which the general public is able to identify a brand by its attributes",tr:"znalost značky, povědomí o značce",unit:"Marketing"},
+  {term:"Brand stretching",def:"the act of using an established brand name in order to introduce unrelated products",tr:"přenášení značky (na nové kategorie produktů)",unit:"Marketing"},
+  {term:"Branding",def:"the process involved in creating a unique name and image for a product in the consumers' mind, mainly through advertising campaigns with a consistent theme",tr:"branding, budování značky",unit:"Marketing"},
+  {term:"Commercial",def:"a television or radio advertisement",tr:"reklama (v televizi či rádiu)",unit:"Marketing"},
+  {term:"Commercial break",def:"an interruption of a programme, or an intermission between programmes, during which advertisements are broadcast",tr:"reklamní přestávka",unit:"Marketing"},
+  {term:"Counterfeit brands",def:"products made to look exactly like famous brands, in order to deceive people",tr:"padělané značky",unit:"Marketing"},
+  {term:"Demand",def:"desire for a certain good or service supported by the capacity to purchase it",tr:"poptávka",unit:"Marketing"},
+  {term:"Desk research / Secondary research",def:"searching for information in existing sources",tr:"sekundární výzkum",unit:"Marketing"},
+  {term:"Field research / Primary research",def:"collecting primary (original, otherwise unavailable) data",tr:"primární výzkum",unit:"Marketing"},
+  {term:"Focus group",def:"a representative group of people questioned together about their opinions on something",tr:"skupinová diskuse",unit:"Marketing"},
+  {term:"Intangible",def:"not existing as a physical thing but still valuable to a company",tr:"nehmotný",unit:"Marketing"},
+  {term:"Logo",def:"a printed design or symbol that a company or an organisation uses as its special sign",tr:"logo",unit:"Marketing"},
+  {term:"Market research",def:"the gathering and studying of data related to consumer preferences, purchasing power, etc., especially prior to introducing a product on the market",tr:"výzkum trhu",unit:"Marketing"},
+  {term:"Online survey",def:"an investigation of the opinions of people conducted on the internet",tr:"internetový průzkum",unit:"Marketing"},
+  {term:"Own brand / Private brand / Private label",def:"a brand owned not by a manufacturer or producer but by a retailer or supplier who gets its goods made by a contract manufacturer under its own label",tr:"privátní značka, maloobchodní značka",unit:"Marketing"},
+  {term:"Pop-up ad",def:"a form of online advertisement that shows up in a new browser window",tr:"automaticky otvíraná reklamní okna",unit:"Marketing"},
+  {term:"Premium brand",def:"a brand that is respected as holding greater brand value than other brands, targeting high-income customers",tr:"prémiová značka",unit:"Marketing"},
+  {term:"Product differentiation",def:"a marketing process of distinguishing a product or service from others to make it more attractive to a particular target market",tr:"produktová diferenciace, odlišování výrobků",unit:"Marketing"},
+  {term:"Product placement",def:"the appearance of or reference to a product in film, television, or other media",tr:"umisťování komerčních výrobků",unit:"Marketing"},
+  {term:"Public Relations (PR)",def:"the practice of managing the spread of information between an individual or an organisation and the public",tr:"public relations, vztahy s veřejností",unit:"Marketing"},
+  {term:"Questionnaire",def:"a list of questions submitted for replies that can be analysed for usable information",tr:"dotazník",unit:"Marketing"},
+  {term:"Response rate",def:"the number of people who answered a survey divided by the number of people in the sample",tr:"návratnost (dotazníku), míra odpovědí",unit:"Marketing"},
+  {term:"Sales promotion",def:"the techniques for stimulating sales achieved through contests, demonstrations, discounts, point-of-sale displays, special offers and similar activities",tr:"podpora prodeje",unit:"Marketing"},
+  {term:"Sample",def:"a group of people who are used for getting information about a larger group or about the whole population",tr:"vzorek",unit:"Marketing"},
+  {term:"Tagline / Slogan",def:"a word or phrase that is easy to remember, used for example by a political party or in advertising to attract people's attention",tr:"reklamní slogan",unit:"Marketing"},
+  {term:"Tangible",def:"that you can touch and feel (asset, attribute)",tr:"hmotný",unit:"Marketing"},
+  {term:"Trademark (TM)",def:"a name, symbol or design that a company uses for its products and that cannot be used by anyone else",tr:"ochranná známka",unit:"Marketing"},
+  {term:"Viral marketing",def:"marketing techniques that use social networking services and other technologies to try to achieve marketing objectives",tr:"virální marketing",unit:"Marketing"},
+  {term:"Word-of-mouth (WOM)",def:"the passing of information from person to person by oral communication",tr:"word of mouth, 'slovo z úst', ústní doporučení",unit:"Marketing"},
+
+  // ---- Banking & Financial Products (2AJ212) ----
+  {term:"Asset",def:"a thing of value, especially property, that a person or company owns, which can be used or sold to pay debts",tr:"majetek",unit:"Banking"},
+  {term:"Bond",def:"an official paper given by the government or a company to show that you have lent them money that they will pay back at a particular interest rate",tr:"dluhopis",unit:"Banking"},
+  {term:"Building society",def:"an organisation like a bank that lends money to people who want to buy a house; people also save money with a building society",tr:"stavební spořitelna",unit:"Banking"},
+  {term:"Central bank",def:"a national bank that does business with the government and other banks, and issues the country's coins and paper money",tr:"centrální banka",unit:"Banking"},
+  {term:"Commercial bank / Retail bank",def:"a bank that offers services to the general public and to businesses",tr:"komerční banka",unit:"Banking"},
+  {term:"Conglomerate",def:"a large company formed by joining together different firms",tr:"konglomerát",unit:"Banking"},
+  {term:"Coupon",def:"the amount of interest that a bond pays",tr:"výnos/úrok z dluhopisu, kupón",unit:"Banking"},
+  {term:"Credit",def:"1. money that you borrow from a bank; a loan 2. an arrangement to pay later for something you buy 3. to add money to somebody's bank account",tr:"1. úvěr, půjčka 2. úvěr 3. připsat",unit:"Banking"},
+  {term:"Credit card",def:"a plastic card that you can use to buy goods and services and pay for them later",tr:"kreditní karta",unit:"Banking"},
+  {term:"Current account (BrE) / Checking account (AmE)",def:"a type of bank account that you can take money out of at any time, and that provides you with a debit card",tr:"běžný účet",unit:"Banking"},
+  {term:"Debit card",def:"a plastic card that can be used to take money directly from your bank account when you pay for something",tr:"debetní karta",unit:"Banking"},
+  {term:"Debt",def:"a sum of money that somebody owes",tr:"dluh",unit:"Banking"},
+  {term:"Default",def:"to fail to do something that you legally have to do, especially by not paying a debt",tr:"nezaplatit; neplnění závazku",unit:"Banking"},
+  {term:"Deflation",def:"a reduction in the amount of money in a country's economy so that prices fall or remain the same",tr:"deflace",unit:"Banking"},
+  {term:"Deposit",def:"1. a sum of money paid into a bank account 2. a sum of money given as the first part of a larger payment 3. a sum of money paid when renting something 4. to put money into a bank account",tr:"1. vklad 2. záloha 3. kauce, vratná záloha, jistina 4. uložit peníze, deponovat",unit:"Banking"},
+  {term:"Direct debit",def:"an instruction to your bank to allow somebody else to take an amount of money from your account on a particular date, especially to pay bills",tr:"inkaso",unit:"Banking"},
+  {term:"Dividend",def:"an amount of the profits that a company pays to people who own shares in the company",tr:"dividenda",unit:"Banking"},
+  {term:"Embezzle",def:"to steal money that you are responsible for or that belongs to your employer",tr:"zpronevěřit, defraudovat",unit:"Banking"},
+  {term:"Hedge fund",def:"an investment fund involving a group of people who take high risks with their investments in order to try and make a lot of money",tr:"hedgeový fond",unit:"Banking"},
+  {term:"High-yield bond / Junk bond",def:"a type of bond that pays a high rate of interest because there is a lot of risk involved",tr:"rizikový dluhopis/podřadná obligace",unit:"Banking"},
+  {term:"Insurance company",def:"a company whose business is providing and selling insurance",tr:"pojišťovna",unit:"Banking"},
+  {term:"Interest rate",def:"percentage paid by either the borrower on a loan or by the bank on money deposited",tr:"úroková míra/sazba",unit:"Banking"},
+  {term:"Intermediary",def:"a person or an organisation that helps other people or organisations to make an agreement by being a means of communication between them",tr:"zprostředkovatel",unit:"Banking"},
+  {term:"Internet bank",def:"a bank that operates over the internet",tr:"internetová banka",unit:"Banking"},
+  {term:"Investment bank",def:"a bank that deals with large businesses",tr:"investiční banka",unit:"Banking"},
+  {term:"Investment-grade bond",def:"a secure bond that generally pays low rate of interest",tr:"dobře investičně hodnocený dluhopis",unit:"Banking"},
+  {term:"Launder (money)",def:"to move money that has been obtained illegally into foreign bank accounts or legal businesses so that it is difficult for people to know where the money came from",tr:"prát (špinavé peníze)",unit:"Banking"},
+  {term:"Liability",def:"money that is owed to someone and has to be paid in the future, such as tax, debt, interest, and mortgage payments",tr:"závazek",unit:"Banking"},
+  {term:"Liquid",def:"in the form of money, rather than investments or property, or able to be changed into money easily",tr:"likvidní",unit:"Banking"},
+  {term:"Maturity",def:"the length of time for which a bond is issued",tr:"splatnost",unit:"Banking"},
+  {term:"Merger",def:"the act of joining two or more organisations or businesses into one",tr:"fúze",unit:"Banking"},
+  {term:"Microfinance bank",def:"a bank that provides loans to very poor people, usually in developing countries",tr:"mikrofinanční instituce",unit:"Banking"},
+  {term:"Money supply",def:"the total amount of money that exists in the economy of a country at a particular time",tr:"zásoba (nabídka) peněz v ekonomice",unit:"Banking"},
+  {term:"Mortgage",def:"a legal agreement by which a bank lends you money to buy a house and you pay the money back over a particular number of years",tr:"hypotéka",unit:"Banking"},
+  {term:"Mutual fund",def:"service where financial experts invest the money of many people in many different companies",tr:"podílový fond/vzájemný fond",unit:"Banking"},
+  {term:"Non-bank financial intermediary",def:"a financial services firm (not a bank) that usually offers a variety of financial services including leasing or pension funds",tr:"nebankovní zprostředkovatel úvěru",unit:"Banking"},
+  {term:"Overdraft",def:"the amount of money that you owe to a bank when you have spent more money than is in your bank account",tr:"přečerpání účtu, kontokorent",unit:"Banking"},
+  {term:"Principal",def:"the amount of capital making up a bond or other loan",tr:"jistina",unit:"Banking"},
+  {term:"Private bank",def:"a bank that is owned by one person or by a small number of shareholders and which provides financial advice and services for very rich people",tr:"soukromá banka",unit:"Banking"},
+  {term:"Public company",def:"a company that sells shares in itself to the public",tr:"akciová společnost",unit:"Banking"},
+  {term:"Security",def:"a financial or investment instrument bought and sold in financial markets, such as a bond or a share (stock)",tr:"cenný papír",unit:"Banking"},
+  {term:"Standing order",def:"an instruction that you give to your bank to pay somebody a fixed amount of money from your account on the same day each week/month, etc.",tr:"trvalý platební příkaz",unit:"Banking"},
+  {term:"Stock",def:"1. the value of the shares in a company that have been sold 2. a share that somebody has bought in a company or business 3. (BrE) money that is lent to a government at a fixed rate of interest",tr:"1., 2. akcie 3. dluhopis",unit:"Banking"},
+  {term:"Share",def:"any of the units of equal value into which a company is divided and sold to raise money; people who own shares receive part of the company's profits",tr:"akcie (podíl)",unit:"Banking"},
+  {term:"Stock exchange",def:"a place where shares are bought and sold",tr:"burza cenných papírů",unit:"Banking"},
+  {term:"Stock market",def:"the business of buying and selling shares in companies",tr:"trh cenných papírů",unit:"Banking"},
+  {term:"Takeover",def:"an act of taking control of a company by buying most of its shares",tr:"převzetí",unit:"Banking"},
+  {term:"Return",def:"the amount of profit that you get from your investment",tr:"výnos",unit:"Banking"},
+  {term:"Withdraw",def:"to take money out of a bank account",tr:"vybrat, vyzvednout peníze",unit:"Banking"},
+  {term:"Yield",def:"the rate of income an investor receives from their stocks and shares or bonds (commonly called securities)",tr:"výtěžek",unit:"Banking"},
+
+  // ---- Government & Taxation (2AJ212) ----
+  {term:"Capital gains tax",def:"a tax on the proceeds resulting from the sale of assets, e.g. houses, land, etc.",tr:"daň z kapitálových výnosů",unit:"Government"},
+  {term:"Corporate tax",def:"a tax on the profits of companies",tr:"daň z příjmu firem",unit:"Government"},
+  {term:"Customs duty",def:"a tax on imports, e.g. goods entering the country",tr:"clo",unit:"Government"},
+  {term:"Depression",def:"a long and severe recession in an economy",tr:"deprese",unit:"Government"},
+  {term:"Excise duty",def:"a tax placed on specific goods manufactured or sold within a country",tr:"spotřební daň",unit:"Government"},
+  {term:"Externality",def:"a consequence of an industrial or commercial activity which affects other parties",tr:"externalita",unit:"Government"},
+  {term:"Fiscal policy",def:"government actions concerning taxation and public expenditure",tr:"fiskální politika",unit:"Government"},
+  {term:"Income tax",def:"a tax on earned income",tr:"daň z příjmu",unit:"Government"},
+  {term:"Infant industry",def:"an industry which is not fully developed, unable to survive competition",tr:"mladé/vznikající průmyslové odvětví",unit:"Government"},
+  {term:"Minimum wage",def:"the lowest remuneration that employers may legally pay to workers",tr:"minimální mzda",unit:"Government"},
+  {term:"Monetary policy",def:"government or central bank actions concerning the rate of growth of money in circulation",tr:"měnová politika",unit:"Government"},
+  {term:"Pollution",def:"the presence in or introduction into the environment of a substance which has harmful or poisonous effects",tr:"znečištění",unit:"Government"},
+  {term:"Public good",def:"a good that is available for the society as a whole and not just individual members",tr:"veřejný statek",unit:"Government"},
+  {term:"Renewable",def:"a natural resource or source of energy not depleted when used",tr:"obnovitelný",unit:"Government"},
+  {term:"Tax avoidance",def:"the arrangement minimising tax liability within the law",tr:"daňová optimalizace",unit:"Government"},
+  {term:"Tax evasion",def:"the illegal non-payment or underpayment of tax",tr:"daňový únik",unit:"Government"},
+  {term:"Tax haven",def:"a country or independent area where taxes are levied at a lower rate",tr:"daňový ráj",unit:"Government"},
+  {term:"Tax rate",def:"the percentage paid in tax",tr:"daňová sazba",unit:"Government"},
+  {term:"Tax refund",def:"a sum of money that is paid back to the taxpayer",tr:"daňový přeplatek",unit:"Government"},
+  {term:"Tax relief",def:"a sum to be deducted from gross income in the calculation of taxable income",tr:"daňová úleva",unit:"Government"},
+  {term:"Tax return",def:"a form on which a taxpayer makes an annual statement of income",tr:"daňové přiznání",unit:"Government"},
+  {term:"Tax revenue",def:"an amount of money collected by the government",tr:"daňové příjmy",unit:"Government"},
+  {term:"Taxpayer",def:"a person who pays taxes",tr:"daňový poplatník",unit:"Government"},
+  {term:"Transfer payment",def:"payments made by the government to individuals without requiring any goods or services in return",tr:"transferová platba",unit:"Government"},
+  {term:"Unemployment benefit",def:"money paid by the government to people who are unemployed",tr:"podpora v nezaměstnanosti",unit:"Government"},
+  {term:"Value added tax",def:"a tax levied on goods at each stage of production",tr:"daň z přidané hodnoty",unit:"Government"},
+
+  // ---- International Trade & Globalisation (2AJ212) ----
+  {term:"Absolute advantage",def:"the ability of a country, individual, company, etc. to produce a good at a lower cost per unit than any other entity produces that same good or service",tr:"absolutní výhoda",unit:"Trade"},
+  {term:"Balance of payments deficit",def:"the difference in the amount of money going out of a country and that which is coming in, when the total incoming is less than the total outgoing",tr:"schodek platební bilance",unit:"Trade"},
+  {term:"Balance of payments surplus",def:"the difference in the amount of money going out of a country and that which is coming in, when the total incoming is more than the total outgoing",tr:"přebytek platební bilance",unit:"Trade"},
+  {term:"Cargo",def:"the goods that are being carried in a ship, plane or another large vehicle",tr:"náklad",unit:"Trade"},
+  {term:"Comparative advantage",def:"the ability to produce something more efficiently (at a lower opportunity cost) than somebody else",tr:"komparativní výhoda",unit:"Trade"},
+  {term:"Dumping",def:"the act of charging a lower price for the goods in a foreign market than one charges for the same product in a domestic market",tr:"dumping",unit:"Trade"},
+  {term:"Economic sanctions",def:"penalties imposed by one country on another country for political and social issues",tr:"hospodářské sankce",unit:"Trade"},
+  {term:"Economic stability",def:"economic system of a nation that displays only minor fluctuations in the economy",tr:"hospodářská stabilita",unit:"Trade"},
+  {term:"Economies of scale",def:"the reduction in production costs that is a result of making and selling goods in large quantities",tr:"úspory z rozsahu",unit:"Trade"},
+  {term:"Embargo",def:"an official order to stop trade with another country",tr:"embargo",unit:"Trade"},
+  {term:"Export",def:"the business of sending goods to another country in order to sell them there; a product that is sold to another country",tr:"vývoz",unit:"Trade"},
+  {term:"Free trade",def:"a policy by which governments of various nations do not restrict imports to or exports from their countries",tr:"volný obchod",unit:"Trade"},
+  {term:"Globalisation",def:"the process of international integration arising from the interchange of products, ideas and other aspects of culture",tr:"globalizace",unit:"Trade"},
+  {term:"Import",def:"the business of bringing goods from one country into another so they can be sold there; a product that is brought from one country into another",tr:"dovoz",unit:"Trade"},
+  {term:"International trade",def:"the exchange of goods and services between countries",tr:"mezinárodní obchod",unit:"Trade"},
+  {term:"Invisible trade",def:"export and import of physically intangible items such as services",tr:"vývoz a dovoz služeb",unit:"Trade"},
+  {term:"Labour laws",def:"laws regarding the relationship between employers and employees and between employers and trade unions",tr:"pracovní právo",unit:"Trade"},
+  {term:"Multinational corporation (MNC) / Transnational corporation (TNC)",def:"an organisation that owns or controls production of goods and services in one or more countries other than their home country",tr:"nadnárodní korporace",unit:"Trade"},
+  {term:"Opportunity cost",def:"a benefit, profit, or value of something that must be given up to acquire or achieve something",tr:"náklady obětované příležitosti",unit:"Trade"},
+  {term:"Perishable goods",def:"goods that are likely to decay quickly",tr:"zboží podléhající zkáze, rychle se kazící zboží",unit:"Trade"},
+  {term:"Poverty gap",def:"the difference between the total population and those living in poverty (or the difference between rich and poor)",tr:"míra chudoby",unit:"Trade"},
+  {term:"Protectionism",def:"government actions and policies that restrict international trade",tr:"protekcionismus, ochranářství",unit:"Trade"},
+  {term:"Quota",def:"the number of goods and services that can be imported or exported during a particular time period, according to a government-imposed trade restriction",tr:"kvóta",unit:"Trade"},
+  {term:"Red tape",def:"an idiom referring to official rules that seem unnecessary and prevent things from being done quickly and easily",tr:"byrokracie, 'úřední šiml'",unit:"Trade"},
+  {term:"Self-sufficient",def:"not requiring any help, support or interaction for survival; a self-sufficient economy does not trade with the outside world",tr:"soběstačný",unit:"Trade"},
+  {term:"Specialisation",def:"a method of production where a business or area focuses on the production of a limited scope of products or services in order to gain greater degrees of productive efficiency",tr:"specializace",unit:"Trade"},
+  {term:"Standard of living",def:"the amount of money and comfort people have in a particular society",tr:"životní úroveň",unit:"Trade"},
+  {term:"Subsidy",def:"money that is paid by a government or organisation to make prices lower, reduce the cost of producing goods, etc.",tr:"dotace",unit:"Trade"},
+  {term:"Tariff",def:"a tax imposed on imported goods and services, used to restrict trade",tr:"tariff, clo, celní poplatek",unit:"Trade"},
+  {term:"Trade alliance / Trade bloc / Trade agreement",def:"treaty between two or more countries where trade barriers are reduced or eliminated among the participating countries",tr:"mezinárodní obchodní dohoda, aliance",unit:"Trade"},
+  {term:"Visible trade",def:"export and import of goods at various stages of production",tr:"vývoz a dovoz zboží",unit:"Trade"},
+];
+
+// ============================================================
+// STATE
+// ============================================================
+let currentSection = 'flashcards';
+let fcCards = [], fcIndex = 0, fcDirection = 'en';
+let quizCards = [], quizIndex = 0, quizScore = 0, quizAnswered = false;
+let writeCards = [], writeIndex = 0, writeDir = 'en';
+let sessCorrect = 0, sessTotal = 0;
+let matchSelected = null, matchMatched = 0, matchTotal = 0;
+
+document.getElementById('total-count').textContent = WORDS.length;
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+  currentSection = id;
+  if (id === 'quiz') startQuiz();
+  if (id === 'write') startWrite();
+  if (id === 'match') startMatch();
+  if (id === 'browse') renderBrowse();
+}
+
+// ============================================================
+// FILTER HELPER
+// ============================================================
+function filterWords(unitSel) {
+  if (unitSel === 'all') return [...WORDS];
+  return WORDS.filter(w => w.unit === unitSel);
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// ============================================================
+// FLASHCARDS
+// ============================================================
+function resetFlashcards() {
+  const unit = document.getElementById('fc-unit').value;
+  fcCards = shuffle(filterWords(unit));
+  fcIndex = 0;
+  renderFlashcard();
+}
+
+function shuffleCards() {
+  shuffle(fcCards);
+  fcIndex = 0;
+  renderFlashcard();
+}
+
+function setDirection(dir) {
+  fcDirection = dir;
+  document.getElementById('dir-en').classList.toggle('active', dir === 'en');
+  document.getElementById('dir-cz').classList.toggle('active', dir === 'cz');
+  document.getElementById('dir-def').classList.toggle('active', dir === 'def');
+  const labels = { en: 'Zobrazuji: anglický termín → překlad', cz: 'Zobrazuji: český překlad → anglický termín', def: 'Zobrazuji: definice → anglický termín' };
+  document.getElementById('fc-dir-label').textContent = labels[dir];
+  document.getElementById('fc-scene').classList.remove('flipped');
+  renderFlashcard();
+}
+
+function renderFlashcard() {
+  if (!fcCards.length) return;
+  const w = fcCards[fcIndex];
+  const scene = document.getElementById('fc-scene');
+  scene.classList.remove('flipped');
+  document.getElementById('card-current').textContent = fcIndex + 1;
+  document.getElementById('card-total').textContent = fcCards.length;
+  document.getElementById('fc-progress').style.width = ((fcIndex + 1) / fcCards.length * 100) + '%';
+  document.getElementById('fc-unit-badge').textContent = w.unit;
+
+  // Extract part of speech hint from term
+  const posMatch = w.term.match(/\((n|v|adj)\)/);
+  document.getElementById('fc-pos').textContent = posMatch ? posMatch[0] : '';
+
+  if (fcDirection === 'en') {
+    document.getElementById('fc-front-text').textContent = w.term.replace(/\s*\([nvadj]+\)/, '');
+    document.getElementById('fc-back-def').textContent = w.def;
+    document.getElementById('fc-back-text').textContent = w.tr;
+  } else if (fcDirection === 'cz') {
+    document.getElementById('fc-front-text').textContent = w.tr;
+    document.getElementById('fc-back-def').textContent = w.def;
+    document.getElementById('fc-back-text').textContent = w.term.replace(/\s*\([nvadj]+\)/, '');
+  } else {
+    document.getElementById('fc-front-text').textContent = w.def;
+    document.getElementById('fc-back-def').textContent = w.tr;
+    document.getElementById('fc-back-text').textContent = w.term.replace(/\s*\([nvadj]+\)/, '');
+  }
+}
+
+function flipCard() {
+  document.getElementById('fc-scene').classList.toggle('flipped');
+}
+function nextCard() {
+  fcIndex = (fcIndex + 1) % fcCards.length;
+  renderFlashcard();
+}
+function prevCard() {
+  fcIndex = (fcIndex - 1 + fcCards.length) % fcCards.length;
+  renderFlashcard();
+}
+
+// Init flashcards
+resetFlashcards();
+
+// ============================================================
+// QUIZ
+// ============================================================
+function startQuiz() {
+  const unit = document.getElementById('quiz-unit').value;
+  quizCards = shuffle(filterWords(unit));
+  quizIndex = 0; quizScore = 0; quizAnswered = false;
+  sessCorrect = 0; sessTotal = 0;
+  updateSessionScore();
+  renderQuiz();
+}
+
+function renderQuiz() {
+  const area = document.getElementById('quiz-area');
+  if (quizIndex >= quizCards.length) {
+    area.innerHTML = `
+      <div class="quiz-result">
+        <h2>Hotovo! 🎉</h2>
+        <p style="color:var(--text-muted)">Dosáhl(a) jsi</p>
+        <span class="score-big">${quizScore}/${quizCards.length}</span>
+        <p style="color:var(--text-muted); margin-bottom:24px">${Math.round(quizScore/quizCards.length*100)}% správně</p>
+        <button class="btn btn-primary" onclick="startQuiz()">Zkusit znovu</button>
+      </div>`;
+    return;
+  }
+
+  const w = quizCards[quizIndex];
+  const type = document.getElementById('quiz-type').value;
+  const pool = filterWords(document.getElementById('quiz-unit').value);
+
+  let question, correctAnswer, getWrong;
+  if (type === 'en2cz') {
+    question = w.term; correctAnswer = w.tr;
+    getWrong = () => pool.filter(x => x.tr !== w.tr).map(x => x.tr);
+  } else if (type === 'cz2en') {
+    question = w.tr; correctAnswer = w.term;
+    getWrong = () => pool.filter(x => x.term !== w.term).map(x => x.term);
+  } else {
+    question = w.def; correctAnswer = w.term;
+    getWrong = () => pool.filter(x => x.term !== w.term).map(x => x.term);
+  }
+
+  const wrongPool = shuffle(getWrong()).slice(0, 3);
+  const options = shuffle([correctAnswer, ...wrongPool]);
+
+  area.innerHTML = `
+    <div class="quiz-score">Otázka <strong>${quizIndex + 1}</strong>/${quizCards.length} &nbsp;|&nbsp; Správně: <strong>${quizScore}</strong></div>
+    <div class="quiz-question">
+      <div class="quiz-label">${type === 'en2cz' ? 'Přelož do češtiny' : type === 'cz2en' ? 'Přelož do angličtiny' : 'Který termín odpovídá definici?'}</div>
+      <div class="quiz-term">${question}</div>
+      ${type !== 'en2cz' && w.def && type === 'def2en' ? '' : type === 'cz2en' ? '' : ''}
+    </div>
+    <div class="quiz-options">
+      ${options.map(o => `<button class="quiz-option" onclick="checkQuiz(this, '${encodeURIComponent(o)}', '${encodeURIComponent(correctAnswer)}')">${o}</button>`).join('')}
+    </div>
+    <div style="text-align:center;margin-top:8px">
+      <button class="btn btn-outline btn-sm" id="next-btn" onclick="nextQuiz()" style="display:none">Další →</button>
+    </div>`;
+}
+
+function checkQuiz(btn, selected, correct) {
+  if (quizAnswered) return;
+  quizAnswered = true;
+  const sel = decodeURIComponent(selected);
+  const cor = decodeURIComponent(correct);
+  const opts = document.querySelectorAll('.quiz-option');
+  opts.forEach(o => {
+    o.disabled = true;
+    if (o.textContent === cor) o.classList.add('correct');
+  });
+  if (sel === cor) {
+    btn.classList.add('correct');
+    quizScore++; sessCorrect++;
+  } else {
+    btn.classList.add('wrong');
+  }
+  sessTotal++;
+  updateSessionScore();
+  document.getElementById('next-btn').style.display = 'inline-block';
+}
+
+function nextQuiz() {
+  quizIndex++; quizAnswered = false;
+  renderQuiz();
+}
+
+function updateSessionScore() {
+  const bar = document.getElementById('session-score');
+  if (sessTotal > 0) {
+    bar.style.display = 'block';
+    document.getElementById('sess-correct').textContent = sessCorrect;
+    document.getElementById('sess-total').textContent = sessTotal;
+  }
+}
+
+// ============================================================
+// WRITE MODE
+// ============================================================
+function startWrite() {
+  const unit = document.getElementById('write-unit').value;
+  writeCards = shuffle(filterWords(unit));
+  writeIndex = 0;
+  renderWrite();
+}
+
+function setWriteDir(dir) {
+  writeDir = dir;
+  document.getElementById('wdir-en').classList.toggle('active', dir === 'en');
+  document.getElementById('wdir-cz').classList.toggle('active', dir === 'cz');
+  startWrite();
+}
+
+function renderWrite() {
+  const area = document.getElementById('write-area');
+  if (writeIndex >= writeCards.length) {
+    area.innerHTML = `<div class="quiz-result"><h2>Hotovo! ✍️</h2><p style="color:var(--text-muted);margin-bottom:24px">Prošel(la) jsi všechna slovíčka.</p><button class="btn btn-primary" onclick="startWrite()">Znovu</button></div>`;
+    return;
+  }
+  const w = writeCards[writeIndex];
+  const isEnToCz = writeDir === 'en';
+  const prompt = isEnToCz ? w.term : w.tr;
+  const hint = isEnToCz ? `Definice: ${w.def}` : `Definice: ${w.def}`;
+  const correct = isEnToCz ? w.tr.toLowerCase() : w.term.toLowerCase();
+
+  area.innerHTML = `
+    <div class="write-card">
+      <div class="write-question">${isEnToCz ? 'Přeloď do češtiny' : 'Přeloď do angličtiny'} &nbsp;(${writeIndex+1}/${writeCards.length})</div>
+      <div class="write-term">${prompt}</div>
+      <div class="write-hint">${hint}</div>
+      <input class="write-input" id="write-inp" type="text" placeholder="${isEnToCz ? 'Napiš český překlad...' : 'Napiš anglický termín...'}" autocomplete="off" onkeydown="if(event.key==='Enter') checkWrite()">
+      <div class="write-feedback" id="write-fb"></div>
+    </div>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="checkWrite()">Zkontrolovat</button>
+      <button class="btn btn-outline" onclick="skipWrite()">Přeskočit</button>
+    </div>`;
+  setTimeout(() => document.getElementById('write-inp')?.focus(), 50);
+}
+
+function checkWrite() {
+  const inp = document.getElementById('write-inp');
+  const fb = document.getElementById('write-fb');
+  if (!inp || inp.dataset.checked) return;
+  inp.dataset.checked = '1';
+
+  const w = writeCards[writeIndex];
+  const isEnToCz = writeDir === 'en';
+  const userAns = inp.value.trim().toLowerCase();
+  const correctRaw = isEnToCz ? w.tr : w.term;
+  const correct = correctRaw.toLowerCase();
+
+  // Accept partial match (first part before comma)
+  const firstCorrect = correct.split(',')[0].split(';')[0].trim();
+  const isOk = userAns === correct || userAns === firstCorrect || correct.includes(userAns) && userAns.length > 3;
+
+  if (isOk) {
+    inp.classList.add('correct-input');
+    fb.className = 'write-feedback correct show';
+    fb.textContent = `✓ Správně! ${correctRaw}`;
+  } else {
+    inp.classList.add('wrong-input');
+    fb.className = 'write-feedback wrong show';
+    fb.textContent = `✗ Správná odpověď: ${correctRaw}`;
+  }
+
+  setTimeout(() => { writeIndex++; renderWrite(); }, 1600);
+}
+
+function skipWrite() {
+  writeIndex++;
+  renderWrite();
+}
+
+// ============================================================
+// MATCHING GAME
+// ============================================================
+let matchPairs = [], matchLeftSel = null, matchRightSel = null;
+
+function startMatch() {
+  const unit = document.getElementById('match-unit').value;
+  const pool = shuffle(filterWords(unit)).slice(0, 8);
+  matchPairs = pool;
+  matchMatched = 0;
+  matchTotal = pool.length;
+  matchLeftSel = null; matchRightSel = null;
+  renderMatch();
+}
+
+function renderMatch() {
+  const area = document.getElementById('match-area');
+  const leftItems = matchPairs.map((w, i) => ({id: i, text: w.term.replace(/\s*\([nvadj]+\)/, ''), side: 'left'}));
+  const rightItems = shuffle(matchPairs.map((w, i) => ({id: i, text: w.tr.split(',')[0].trim(), side: 'right'})));
+
+  area.innerHTML = `
+    <div class="match-score">Spárováno: <strong>${matchMatched}</strong>/${matchTotal}</div>
+    <div class="match-grid">
+      <div class="match-col" id="match-left">
+        ${leftItems.map(it => `<div class="match-card" id="ml-${it.id}" onclick="selectMatch('left',${it.id})">${it.text}</div>`).join('')}
+      </div>
+      <div class="match-col" id="match-right">
+        ${rightItems.map(it => `<div class="match-card" id="mr-${it.id}" onclick="selectMatch('right',${it.id})">${it.text}</div>`).join('')}
+      </div>
+    </div>`;
+}
+
+function selectMatch(side, id) {
+  const el = document.getElementById(side === 'left' ? `ml-${id}` : `mr-${id}`);
+  if (el.classList.contains('matched')) return;
+
+  if (side === 'left') {
+    if (matchLeftSel !== null) document.getElementById(`ml-${matchLeftSel}`)?.classList.remove('selected');
+    matchLeftSel = id;
+    el.classList.add('selected');
+  } else {
+    if (matchRightSel !== null) document.getElementById(`mr-${matchRightSel}`)?.classList.remove('selected');
+    matchRightSel = id;
+    el.classList.add('selected');
+  }
+
+  if (matchLeftSel !== null && matchRightSel !== null) {
+    const lEl = document.getElementById(`ml-${matchLeftSel}`);
+    const rEl = document.getElementById(`mr-${matchRightSel}`);
+    if (matchLeftSel === matchRightSel) {
+      lEl.classList.remove('selected'); lEl.classList.add('matched');
+      rEl.classList.remove('selected'); rEl.classList.add('matched');
+      matchMatched++;
+      document.querySelector('.match-score').innerHTML = `Spárováno: <strong>${matchMatched}</strong>/${matchTotal}`;
+      if (matchMatched === matchTotal) {
+        setTimeout(() => {
+          document.getElementById('match-area').insertAdjacentHTML('afterbegin', `
+            <div class="quiz-result" style="margin-bottom:20px">
+              <h2>Výborně! 🎯</h2>
+              <p style="color:var(--text-muted);margin-bottom:20px">Všechny páry správně!</p>
+              <button class="btn btn-primary" onclick="startMatch()">Nová hra</button>
+            </div>`);
+        }, 300);
+      }
+    } else {
+      lEl.classList.add('wrong-flash'); rEl.classList.add('wrong-flash');
+      setTimeout(() => {
+        lEl.classList.remove('wrong-flash', 'selected');
+        rEl.classList.remove('wrong-flash', 'selected');
+      }, 450);
+    }
+    matchLeftSel = null; matchRightSel = null;
+  }
+}
+
+// ============================================================
+// BROWSE
+// ============================================================
+function renderBrowse() {
+  const search = document.getElementById('browse-search').value.toLowerCase();
+  const unit = document.getElementById('browse-unit').value;
+  let pool = filterWords(unit);
+  if (search) pool = pool.filter(w => w.term.toLowerCase().includes(search) || w.tr.toLowerCase().includes(search) || w.def.toLowerCase().includes(search));
+
+  const grid = document.getElementById('browse-grid');
+  grid.innerHTML = pool.map(w => `
+    <div class="browse-card">
+      <div class="browse-unit-tag">${w.unit}</div>
+      <div class="browse-term">${w.term}</div>
+      <div class="browse-translation">${w.tr}</div>
+      <div class="browse-def">${w.def}</div>
+    </div>`).join('');
+}
+
+// Start quiz on load
+setTimeout(startQuiz, 100);
+</script>
+</body>
+</html>
