@@ -37,7 +37,7 @@
   main{flex:1;overflow-y:auto;overflow-x:hidden;position:relative;z-index:5;-webkit-overflow-scrolling:touch;}
 
   /* SECTIONS */
-  .section{display:none;padding:16px 14px 100px;} /* ZVĚTŠENÝ PADDING PRO PLOVOUCÍ TLAČÍTKO */
+  .section{display:none;padding:16px 14px 110px;} /* Extra misto dole pro plovoucí tlačítka */
   .section.active{display:block;animation:fadeUp .25s ease;}
   @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 
@@ -58,13 +58,36 @@
   .dir-toggle button{padding:5px 10px;border-radius:20px;border:1.5px solid var(--border);background:transparent;color:var(--text-muted);font-size:.72rem;cursor:pointer;transition:all .18s;font-family:'JetBrains Mono',monospace;white-space:nowrap;}
   .dir-toggle button.active{background:var(--accent2);border-color:var(--accent2);color:#fff;}
 
-  /* BTN */
+  /* BTN & PLOVOUCÍ LIŠTA */
   .btn{padding:10px 22px;border-radius:50px;border:none;font-family:'Lato',sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;transition:all .2s;letter-spacing:.3px;white-space:nowrap;}
   .btn-primary{background:var(--accent);color:var(--bg);}
   .btn-primary:hover{transform:translateY(-1px);box-shadow:0 5px 18px rgba(232,197,71,.3);}
   .btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--text-muted);}
   .btn-outline:hover{border-color:var(--text-muted);color:var(--text);}
   .btn-sm{padding:6px 13px;font-size:.75rem;}
+  
+  .fixed-bottom-bar {
+    position: fixed;
+    bottom: 24px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    z-index: 999;
+    pointer-events: none; /* Propustí kliknutí mimo tlačítka */
+  }
+  .fixed-bottom-bar > * {
+    pointer-events: auto; /* Znovu povolí kliknutí na tlačítka */
+  }
+  .shadow-btn {
+    box-shadow: 0 10px 30px rgba(0,0,0,0.8), 0 0 20px rgba(232,197,71,0.4);
+  }
+  .bg-glass {
+    background: rgba(36, 35, 53, 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
 
   /* FLASHCARDS */
   #flashcard-area{display:flex;flex-direction:column;align-items:center;gap:16px;}
@@ -83,7 +106,6 @@
   .card-term{font-family:'Playfair Display',serif;font-size:clamp(1.15rem,3.5vw,1.85rem);font-weight:700;line-height:1.25;margin-bottom:8px;color:var(--text);}
   .card-definition{font-size:.84rem;color:var(--text-muted);line-height:1.5;margin-bottom:10px;max-height:100px;overflow-y:auto;}
   .card-translation{font-family:'Playfair Display',serif;font-size:clamp(1.1rem,3vw,1.5rem);font-weight:700;color:var(--accent);}
-  .card-controls{display:flex;gap:9px;flex-wrap:wrap;justify-content:center;}
   .card-direction{font-size:.68rem;color:var(--text-muted);font-family:'JetBrains Mono',monospace;text-align:center;}
 
   /* QUIZ */
@@ -162,6 +184,15 @@
   ::-webkit-scrollbar{width:4px;}
   ::-webkit-scrollbar-track{background:transparent;}
   ::-webkit-scrollbar-thumb{background:var(--surface2);border-radius:2px;}
+
+  /* OPTIMALIZACE PRO MALÉ DISPLEJE */
+  @media(max-height: 750px) {
+    .match-card { padding: 9px 10px; font-size: 0.75rem; line-height: 1.3;}
+    .flashcard-scene { height: 220px; }
+    .quiz-question { padding: 16px; }
+    .quiz-option { padding: 10px 12px; }
+    .write-card { padding: 16px; }
+  }
 </style>
 </head>
 <body>
@@ -222,11 +253,12 @@
         </div>
       </div>
     </div>
-    <div class="card-controls">
-      <button class="btn btn-outline" onclick="prevCard()">← Zpět</button>
-      <button class="btn btn-primary" onclick="nextCard()">Další →</button>
-    </div>
     <div class="card-direction" id="fc-dir-label">EN → CZ</div>
+    
+    <div class="fixed-bottom-bar" id="fc-controls">
+      <button class="btn btn-outline bg-glass" onclick="prevCard()">← Zpět</button>
+      <button class="btn btn-primary shadow-btn" onclick="nextCard()">Další →</button>
+    </div>
   </div>
 </section>
 
@@ -279,7 +311,7 @@
 
 <section id="match" class="section">
   <div class="section-title">Přiřazování</div>
-  <div class="section-sub">Spoj anglický termín s českým překladem (8 párů)</div>
+  <div class="section-sub">Spoj anglický termín s českým překladem (6 párů)</div>
   <div class="filter-bar">
     <select id="match-unit" onchange="startMatch()">
       <option value="all">Vše</option>
@@ -753,8 +785,9 @@ function renderQuiz(){
   area.innerHTML=`<div class="quiz-score">Otázka <strong>${quizIndex+1}</strong>/${quizCards.length} &nbsp;|&nbsp; ✓ <strong>${quizScore}</strong></div>
     <div class="quiz-question"><div class="quiz-label">${type==='en2cz'?'Přeloď do češtiny':type==='cz2en'?'Přeloď do angličtiny':'Který termín odpovídá definici?'}</div><div class="quiz-term">${q}</div></div>
     <div class="quiz-options">${opts.map(o=>`<button class="quiz-option" onclick="checkQuiz(this,'${encodeURIComponent(o)}','${encodeURIComponent(correct)}')">${o}</button>`).join('')}</div>
-    <div id="next-btn-container" style="display:none; position:fixed; bottom:24px; left:0; right:0; text-align:center; z-index:999; pointer-events:none;">
-      <button class="btn btn-primary" id="next-btn" onclick="nextQuiz()" style="pointer-events:auto; font-size:1.15rem; padding:14px 45px; box-shadow: 0 10px 30px rgba(0,0,0,0.8), 0 0 20px rgba(232,197,71,0.4);">Další →</button>
+    
+    <div class="fixed-bottom-bar" id="next-btn-container" style="display:none;">
+      <button class="btn btn-primary shadow-btn" id="next-btn" onclick="nextQuiz()" style="font-size:1.15rem; padding:12px 40px;">Další →</button>
     </div>`;
 }
 
@@ -765,8 +798,7 @@ function checkQuiz(btn,sel,cor){
   if(s===c){btn.classList.add('correct');quizScore++;sessC++;}else btn.classList.add('wrong');
   sessT++;updateSess();
   saveQuizState();
-  // ZDE SE ZOBRAZÍ PLOVOUCÍ TLAČÍTKO "DALŠÍ", ANIŽ BYS MUSEL SCROLLOVAT:
-  document.getElementById('next-btn-container').style.display='block';
+  document.getElementById('next-btn-container').style.display='flex';
 }
 
 function nextQuiz(){
@@ -831,7 +863,11 @@ function renderWrite(){
   }
   const w=writeCards[writeIndex];const isEn=writeDir==='en';
   area.innerHTML=`<div class="write-card"><div class="write-question">${isEn?'Přeloď do češtiny':'Přeloď do angličtiny'} &nbsp;(${writeIndex+1}/${writeCards.length})</div><div class="write-term">${isEn?w.term:w.tr}</div><div class="write-hint">${w.def}</div><input class="write-input" id="write-inp" type="text" placeholder="${isEn?'Napiš český překlad...':'Napiš anglický termín...'}" autocomplete="off" onkeydown="if(event.key==='Enter')checkWrite()"><div class="write-feedback" id="write-fb"></div></div>
-    <div style="display:flex;gap:9px;justify-content:center;flex-wrap:wrap"><button class="btn btn-primary" onclick="checkWrite()">Zkontrolovat</button><button class="btn btn-outline" onclick="skipWrite()">Přeskočit</button></div>`;
+    
+    <div class="fixed-bottom-bar" id="write-controls">
+      <button class="btn btn-primary shadow-btn" onclick="checkWrite()">Zkontrolovat</button>
+      <button class="btn btn-outline bg-glass" onclick="skipWrite()">Přeskočit</button>
+    </div>`;
   setTimeout(()=>{try{document.getElementById('write-inp').focus();}catch(e){}},80);
 }
 
@@ -854,7 +890,8 @@ function skipWrite(){writeIndex++;saveWriteState();renderWrite();scrollTop();}
 // ════════════════════════════════════════════════
 let matchPairs=[],matchMatched=0,matchTotal=0,matchLeftSel=null,matchRightSel=null;
 function startMatch(){
-  const pool=shuffle(activeWords(document.getElementById('match-unit').value)).slice(0,8);
+  // OMEZENO NA 6 PÁRŮ ABY SE TO VEŠLO NA MOBIL BEZ SCROLLOVÁNÍ
+  const pool=shuffle(activeWords(document.getElementById('match-unit').value)).slice(0,6);
   matchPairs=pool;matchMatched=0;matchTotal=pool.length;matchLeftSel=null;matchRightSel=null;
   renderMatch();scrollTop();
 }
@@ -865,7 +902,12 @@ function renderMatch(){
   const right=shuffle(matchPairs.map((w,i)=>({id:i,text:w.tr.split(',')[0].trim()})));
   area.innerHTML=`<div class="match-score">Spárováno: <strong>${matchMatched}</strong>/${matchTotal}</div>
     <div class="match-grid"><div class="match-col">${left.map(it=>`<div class="match-card" id="ml-${it.id}" onclick="selectMatch('left',${it.id})">${it.text}</div>`).join('')}</div>
-    <div class="match-col">${right.map(it=>`<div class="match-card" id="mr-${it.id}" onclick="selectMatch('right',${it.id})">${it.text}</div>`).join('')}</div></div>`;
+    <div class="match-col">${right.map(it=>`<div class="match-card" id="mr-${it.id}" onclick="selectMatch('right',${it.id})">${it.text}</div>`).join('')}</div></div>
+    
+    <div class="fixed-bottom-bar" id="match-controls" style="display:none; flex-direction:column; align-items:center; gap:8px;">
+      <div style="background:var(--success); color:#000; padding:4px 12px; border-radius:20px; font-weight:bold; font-size:0.8rem;">🎉 Všechno správně!</div>
+      <button class="btn btn-primary shadow-btn" onclick="startMatch()" style="font-size:1.15rem; padding:12px 40px;">Nová hra 🔄</button>
+    </div>`;
 }
 function selectMatch(side,id){
   const el=document.getElementById(side==='left'?`ml-${id}`:`mr-${id}`);
@@ -877,7 +919,12 @@ function selectMatch(side,id){
     if(matchLeftSel===matchRightSel){
       lEl.classList.remove('selected');lEl.classList.add('matched');rEl.classList.remove('selected');rEl.classList.add('matched');
       matchMatched++;document.querySelector('.match-score').innerHTML=`Spárováno: <strong>${matchMatched}</strong>/${matchTotal}`;
-      if(matchMatched===matchTotal){setTimeout(()=>{document.getElementById('match-area').insertAdjacentHTML('afterbegin',`<div class="quiz-result" style="margin-bottom:14px"><h2>Výborně! 🎯</h2><p style="color:var(--text-muted);margin-bottom:14px">Všechny páry správně!</p><button class="btn btn-primary" onclick="startMatch()">Nová hra</button></div>`);scrollTop();},300);}
+      if(matchMatched===matchTotal){
+        setTimeout(()=>{
+          // UKÁŽE SE PLOVOUCÍ TLAČÍTKO "NOVÁ HRA"
+          document.getElementById('match-controls').style.display='flex';
+        },300);
+      }
     }else{
       lEl.classList.add('wrong-flash');rEl.classList.add('wrong-flash');
       setTimeout(()=>{lEl.classList.remove('wrong-flash','selected');rEl.classList.remove('wrong-flash','selected');},450);
