@@ -37,12 +37,12 @@
   main{flex:1;overflow-y:auto;overflow-x:hidden;position:relative;z-index:5;-webkit-overflow-scrolling:touch;}
 
   /* SECTIONS */
-  .section{display:none;padding:16px 14px 100px;}
+  .section{display:none;padding:16px 14px 100px;} /* ZVĚTŠENÝ PADDING PRO PLOVOUCÍ TLAČÍTKO */
   .section.active{display:block;animation:fadeUp .25s ease;}
   @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 
-  @media(min-width:520px){.section{padding:24px 28px 44px;}header{padding:0 28px;}nav{padding:8px 20px;gap:6px;}.nav-btn{padding:8px 18px;font-size:.84rem;}}
-  @media(min-width:860px){.section{padding:30px 40px 52px;}}
+  @media(min-width:520px){.section{padding:24px 28px 120px;}header{padding:0 28px;}nav{padding:8px 20px;gap:6px;}.nav-btn{padding:8px 18px;font-size:.84rem;}}
+  @media(min-width:860px){.section{padding:30px 40px 120px;}}
 
   /* TITLES */
   .section-title{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:900;margin-bottom:3px;}
@@ -185,7 +185,6 @@
 
 <main id="main-scroll">
 
-<!-- FLASHCARDS -->
 <section id="flashcards" class="section active">
   <div class="section-title">Kartičky</div>
   <div class="section-sub">Klikni na kartičku pro zobrazení překladu</div>
@@ -231,7 +230,6 @@
   </div>
 </section>
 
-<!-- QUIZ -->
 <section id="quiz" class="section">
   <div class="section-title">Quiz</div>
   <div class="section-sub">Vyber správnou odpověď ze čtyř možností</div>
@@ -256,7 +254,6 @@
   <div id="quiz-area"></div>
 </section>
 
-<!-- WRITE -->
 <section id="write" class="section">
   <div class="section-title">Psaní</div>
   <div class="section-sub">Napiš správný překlad nebo termín</div>
@@ -280,7 +277,6 @@
   <div id="write-area"></div>
 </section>
 
-<!-- MATCHING -->
 <section id="match" class="section">
   <div class="section-title">Přiřazování</div>
   <div class="section-sub">Spoj anglický termín s českým překladem (8 párů)</div>
@@ -300,7 +296,6 @@
   <div id="match-area"></div>
 </section>
 
-<!-- BROWSE -->
 <section id="browse" class="section">
   <div class="section-title">Procházet</div>
   <div class="section-sub">Přepínačem vypni/zapni slovíčko — vypnutá se <strong>nezobrazují</strong> při procvičování</div>
@@ -758,7 +753,9 @@ function renderQuiz(){
   area.innerHTML=`<div class="quiz-score">Otázka <strong>${quizIndex+1}</strong>/${quizCards.length} &nbsp;|&nbsp; ✓ <strong>${quizScore}</strong></div>
     <div class="quiz-question"><div class="quiz-label">${type==='en2cz'?'Přeloď do češtiny':type==='cz2en'?'Přeloď do angličtiny':'Který termín odpovídá definici?'}</div><div class="quiz-term">${q}</div></div>
     <div class="quiz-options">${opts.map(o=>`<button class="quiz-option" onclick="checkQuiz(this,'${encodeURIComponent(o)}','${encodeURIComponent(correct)}')">${o}</button>`).join('')}</div>
-    <div style="text-align:center;margin-top:6px"><button class="btn btn-outline btn-sm" id="next-btn" onclick="nextQuiz()" style="display:none">Další →</button></div>`;
+    <div id="next-btn-container" style="display:none; position:fixed; bottom:24px; left:0; right:0; text-align:center; z-index:999; pointer-events:none;">
+      <button class="btn btn-primary" id="next-btn" onclick="nextQuiz()" style="pointer-events:auto; font-size:1.15rem; padding:14px 45px; box-shadow: 0 10px 30px rgba(0,0,0,0.8), 0 0 20px rgba(232,197,71,0.4);">Další →</button>
+    </div>`;
 }
 
 function checkQuiz(btn,sel,cor){
@@ -768,7 +765,8 @@ function checkQuiz(btn,sel,cor){
   if(s===c){btn.classList.add('correct');quizScore++;sessC++;}else btn.classList.add('wrong');
   sessT++;updateSess();
   saveQuizState();
-  document.getElementById('next-btn').style.display='inline-block';
+  // ZDE SE ZOBRAZÍ PLOVOUCÍ TLAČÍTKO "DALŠÍ", ANIŽ BYS MUSEL SCROLLOVAT:
+  document.getElementById('next-btn-container').style.display='block';
 }
 
 function nextQuiz(){
