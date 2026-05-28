@@ -19,6 +19,10 @@ function activeWords(unit) {
   let pool;
   if (unit === 'starred') {
     pool = WORDS.filter(w => starred.has(w.term));
+  } else if (unit === 'unknown') {
+    pool = WORDS.filter(w => knownStatus[w.term] === false);
+  } else if (unit === 'known') {
+    pool = WORDS.filter(w => knownStatus[w.term] === true);
   } else {
     pool = unit === 'all' ? WORDS : WORDS.filter(w => w.unit === unit);
   }
@@ -110,10 +114,18 @@ function setDirection(dir) {
 function renderFlashcard() {
   if (!fcCards.length) {
     document.getElementById('fc-front-text').textContent = 'Žádná aktivní slovíčka';
+    document.getElementById('fc-back-def').textContent = '';
+    document.getElementById('fc-back-text').textContent = '';
+    document.getElementById('fc-unit-badge').style.display = 'none';
     document.querySelectorAll('.flashcard-scene .card-star-btn').forEach(btn => btn.style.display = 'none');
     document.querySelectorAll('.flashcard-scene .card-status-badge').forEach(b => b.style.display = 'none');
+    const slider = document.getElementById('fc-slider');
+    if (slider) slider.style.display = 'none';
+    document.getElementById('card-current').textContent = '0';
+    document.getElementById('card-total').textContent = '0';
     return;
   }
+  document.getElementById('fc-unit-badge').style.display = 'block';
   document.querySelectorAll('.flashcard-scene .card-star-btn').forEach(btn => btn.style.display = 'flex');
   document.querySelectorAll('.flashcard-scene .card-status-badge').forEach(b => b.style.display = 'block');
   const w = fcCards[fcIndex];
@@ -177,6 +189,19 @@ function toggleStarredCurrent(event) {
     btn.classList.toggle('active', isStarred);
   });
   updateCounts();
+
+  // If currently filtering by starred and the card is unstarred, remove it immediately
+  const filter = document.getElementById('fc-unit').value;
+  if (filter === 'starred' && !isStarred) {
+    fcCards.splice(fcIndex, 1);
+    if (fcCards.length === 0) {
+      fcIndex = 0;
+    } else {
+      fcIndex = fcIndex % fcCards.length;
+    }
+    saveFCState();
+    renderFlashcard();
+  }
 }
 
 function flipCard() { document.getElementById('fc-scene').classList.toggle('flipped'); }
@@ -464,6 +489,10 @@ function renderBrowse() {
   let pool;
   if (unit === 'starred') {
     pool = WORDS.filter(w => starred.has(w.term));
+  } else if (unit === 'unknown') {
+    pool = WORDS.filter(w => knownStatus[w.term] === false);
+  } else if (unit === 'known') {
+    pool = WORDS.filter(w => knownStatus[w.term] === true);
   } else {
     pool = unit === 'all' ? WORDS : WORDS.filter(w => w.unit === unit);
   }
@@ -543,7 +572,25 @@ function swipeCard(direction) {
   saveKnownStatus();
 
   setTimeout(() => {
-    fcIndex = (fcIndex + 1) % fcCards.length;
+    const filter = document.getElementById('fc-unit').value;
+    let shouldRemove = false;
+    if (filter === 'unknown' && knownStatus[w.term] !== false) {
+      shouldRemove = true;
+    } else if (filter === 'known' && knownStatus[w.term] !== true) {
+      shouldRemove = true;
+    }
+
+    if (shouldRemove) {
+      fcCards.splice(fcIndex, 1);
+      if (fcCards.length === 0) {
+        fcIndex = 0;
+      } else {
+        fcIndex = fcIndex % fcCards.length;
+      }
+    } else {
+      fcIndex = (fcIndex + 1) % fcCards.length;
+    }
+    
     saveFCState();
     
     scene.style.transition = 'none';
