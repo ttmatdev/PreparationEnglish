@@ -145,9 +145,21 @@ function renderFlashcard() {
   }
   document.getElementById('fc-unit-badge').textContent = w.unit;
   const t = w.term.replace(/\s*\([nvadj]+\)/g, '');
-  if (fcDirection === 'en') { document.getElementById('fc-front-text').textContent = t; document.getElementById('fc-back-def').textContent = w.def; document.getElementById('fc-back-text').textContent = w.tr; }
-  else if (fcDirection === 'cz') { document.getElementById('fc-front-text').textContent = w.tr; document.getElementById('fc-back-def').textContent = w.def; document.getElementById('fc-back-text').textContent = t; }
-  else { document.getElementById('fc-front-text').textContent = w.def; document.getElementById('fc-back-def').textContent = w.tr; document.getElementById('fc-back-text').textContent = t; }
+  // Format text: insert line break before each numbered definition (2., 3., 4. ...)
+  function fmtText(str) {
+    if (!str) return '';
+    // Escape HTML
+    const esc = str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    // Insert <br> before "2. ", "3. ", etc. (but not the first "1. ")
+    return esc.replace(/ (\d+\.) /g, (m, n) => n === '1.' ? m : '<br>' + n + ' ');
+  }
+  function setField(id, str) {
+    const el = document.getElementById(id);
+    el.innerHTML = fmtText(str);
+  }
+  if (fcDirection === 'en') { document.getElementById('fc-front-text').textContent = t; setField('fc-back-def', w.def); setField('fc-back-text', w.tr); }
+  else if (fcDirection === 'cz') { setField('fc-front-text', w.tr); setField('fc-back-def', w.def); document.getElementById('fc-back-text').textContent = t; }
+  else { setField('fc-front-text', w.def); setField('fc-back-def', w.tr); document.getElementById('fc-back-text').textContent = t; }
 
   const isStarred = starred.has(w.term);
   document.querySelectorAll('.flashcard-scene .card-star-btn').forEach(btn => {
