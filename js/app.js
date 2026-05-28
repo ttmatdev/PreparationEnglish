@@ -571,13 +571,14 @@ function swipeCard(direction) {
 
   scene.addEventListener('touchmove', (e) => {
     if (isSwiping) return;
+    e.preventDefault(); // Zamezit scrollování stránky během swipování
     const touch = e.touches[0];
     deltaX = touch.clientX - startX;
     deltaY = touch.clientY - startY;
     
     const rotate = deltaX * 0.05;
     scene.style.transform = `translate(${deltaX}px, ${deltaY}px) rotate(${rotate}deg)`;
-  }, { passive: true });
+  }, { passive: false });
 
   scene.addEventListener('touchend', () => {
     if (isSwiping) return;

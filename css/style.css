@@ -1207,3 +1207,55 @@ main {
   color: var(--text-muted);
   border: 1px solid rgba(255, 255, 255, 0.06);
 }
+
+/* MOBILE VIEWPORT OPTIMIZATIONS (ZERO-SCROLL) */
+@media(max-width: 520px) {
+  /* Hide title and description on mobile for flashcards to save space */
+  #flashcards .section-title,
+  #flashcards .section-sub {
+    display: none;
+  }
+  
+  /* Make the section padding tighter */
+  #flashcards.section {
+    padding: 12px 10px 80px;
+  }
+
+  /* Make the filter bar tighter and wrap cleanly */
+  #flashcards .filter-bar {
+    margin-bottom: 12px;
+    gap: 6px;
+    justify-content: center;
+  }
+  
+  #flashcards .filter-bar select,
+  #flashcards .filter-bar button,
+  #flashcards .filter-bar input {
+    font-size: 0.78rem;
+    padding: 5px 10px;
+  }
+  
+  #flashcards .dir-toggle button {
+    padding: 5px 8px;
+    font-size: 0.72rem;
+  }
+
+  /* Reduce slider margins */
+  .fc-slider-wrap {
+    margin: 2px 0 8px;
+  }
+  
+  .card-counter {
+    font-size: 0.8rem;
+  }
+
+  /* Reduce card height to fit completely on small screens */
+  .flashcard-scene {
+    height: 210px;
+  }
+  
+  /* Make card controls padding and margins tight */
+  .fixed-bottom-bar {
+    bottom: 12px;
+  }
+}
