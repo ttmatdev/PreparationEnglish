@@ -592,18 +592,146 @@ function swipeCard(direction) {
     deltaY = 0;
   });
 
+  // KEYBINDINGS STATE & CONTROLLERS
+  const DEFAULT_KEYS = {
+    flip: { code: 'Space', label: 'Mezerník' },
+    next: { code: 'ArrowDown', label: 'Šipka dolů' },
+    prev: { code: 'ArrowUp', label: 'Šipka nahoru' },
+    know: { code: 'ArrowRight', label: 'Šipka vpravo' },
+    dontknow: { code: 'ArrowLeft', label: 'Šipka vlevo' },
+    star: { code: 'KeyS', label: 'S' }
+  };
+
+  let keys = LS.get('voc_keys', DEFAULT_KEYS);
+  let activeRecordingAction = null;
+
+  window.openKeybindingsModal = function() {
+    activeRecordingAction = null;
+    document.querySelectorAll('.kb-bind-btn').forEach(btn => btn.classList.remove('recording'));
+    updateKeybindingButtons();
+    document.getElementById('keybindings-modal').style.display = 'flex';
+  };
+
+  window.closeKeybindingsModal = function() {
+    activeRecordingAction = null;
+    updateKeybindingButtons();
+    document.getElementById('keybindings-modal').style.display = 'none';
+  };
+
+  window.recordKey = function(action) {
+    // If already recording this action, cancel it
+    if (activeRecordingAction === action) {
+      activeRecordingAction = null;
+      updateKeybindingButtons();
+      return;
+    }
+    activeRecordingAction = action;
+    updateKeybindingButtons();
+    const btn = document.getElementById(`kb-${action}`);
+    if (btn) {
+      btn.textContent = 'Stiskni klávesu...';
+      btn.classList.add('recording');
+    }
+  };
+
+  window.resetKeybindings = function() {
+    if (confirm('Chceš opravdu obnovit výchozí klávesové zkratky?')) {
+      keys = JSON.parse(JSON.stringify(DEFAULT_KEYS));
+      LS.set('voc_keys', keys);
+      activeRecordingAction = null;
+      updateKeybindingButtons();
+    }
+  };
+
+  function updateKeybindingButtons() {
+    for (const [action, bind] of Object.entries(keys)) {
+      const btn = document.getElementById(`kb-${action}`);
+      if (btn) {
+        btn.textContent = bind.label;
+        btn.classList.remove('recording');
+      }
+    }
+  }
+
+  function getKeyLabel(e) {
+    if (e.code === 'Space') return 'Mezerník';
+    if (e.code === 'ArrowRight') return 'Šipka vpravo';
+    if (e.code === 'ArrowLeft') return 'Šipka vlevo';
+    if (e.code === 'ArrowUp') return 'Šipka nahoru';
+    if (e.code === 'ArrowDown') return 'Šipka dolů';
+    if (e.code === 'Enter') return 'Enter';
+    if (e.code === 'Escape') return 'Escape';
+    if (e.code === 'Tab') return 'Tab';
+    if (e.key.length === 1) return e.key.toUpperCase();
+    return e.key;
+  }
+
+  // Global keydown handler
   document.addEventListener('keydown', (e) => {
+    // 1. If recording a key binding inside modal
+    if (activeRecordingAction) {
+      e.preventDefault();
+      const action = activeRecordingAction;
+      activeRecordingAction = null;
+      
+      // Save new binding
+      keys[action] = {
+        code: e.code,
+        label: getKeyLabel(e)
+      };
+      LS.set('voc_keys', keys);
+      updateKeybindingButtons();
+      return;
+    }
+
+    // 2. Escape closes keybindings modal if open
+    if (e.code === 'Escape') {
+      const modal = document.getElementById('keybindings-modal');
+      if (modal && modal.style.display !== 'none') {
+        e.preventDefault();
+        closeKeybindingsModal();
+        return;
+      }
+    }
+
+    // 3. Ignore other shortcuts if keybindings modal is open
+    const modal = document.getElementById('keybindings-modal');
+    if (modal && modal.style.display !== 'none') {
+      return;
+    }
+
+    // 4. If user is inside an input field or select dropdown, ignore shortcuts
+    if (document.activeElement && (
+      document.activeElement.tagName === 'INPUT' || 
+      document.activeElement.tagName === 'SELECT' || 
+      document.activeElement.tagName === 'TEXTAREA'
+    )) {
+      return;
+    }
+
+    // 5. Shortcuts active in flashcards section
     const fcSection = document.getElementById('flashcards');
     if (fcSection && fcSection.classList.contains('active')) {
-      if (e.key === 'ArrowRight') {
-        e.preventDefault();
-        swipeCard('right');
-      } else if (e.key === 'ArrowLeft') {
-        e.preventDefault();
-        swipeCard('left');
-      } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === ' ') {
+      const code = e.code;
+      
+      if (code === keys.flip.code) {
         e.preventDefault();
         flipCard();
+      } else if (code === keys.next.code) {
+        e.preventDefault();
+        nextCard();
+      } else if (code === keys.prev.code) {
+        e.preventDefault();
+        prevCard();
+      } else if (code === keys.know.code) {
+        e.preventDefault();
+        swipeCard('right');
+      } else if (code === keys.dontknow.code) {
+        e.preventDefault();
+        swipeCard('left');
+      } else if (code === keys.star.code) {
+        e.preventDefault();
+        toggleStarredCurrent();
       }
     }
   });

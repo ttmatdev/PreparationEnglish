@@ -16,12 +16,20 @@
 
   <header>
     <div class="logo">2AJ<span>211</span>+<span>212</span></div>
-    <div class="stats-bar">
-      <span>Celkem: <strong id="total-count">—</strong></span>
-      <span>Aktivní: <strong id="active-count">—</strong></span>
-      <span>Označené: <strong id="starred-count">0</strong></span>
-      <span id="session-score" style="display:none">✓<strong id="sess-correct">0</strong>/<strong
-          id="sess-total">0</strong></span>
+    <div class="header-right">
+      <div class="stats-bar">
+        <span>Celkem: <strong id="total-count">—</strong></span>
+        <span>Aktivní: <strong id="active-count">—</strong></span>
+        <span>Označené: <strong id="starred-count">0</strong></span>
+        <span id="session-score" style="display:none">✓<strong id="sess-correct">0</strong>/<strong
+            id="sess-total">0</strong></span>
+      </div>
+      <button class="settings-btn desktop-only" onclick="openKeybindingsModal()" title="Nastavení klávesových zkratek">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+      </button>
     </div>
   </header>
 
@@ -201,6 +209,47 @@
     </section>
 
   </main>
+
+  <!-- KEYBINDINGS MODAL -->
+  <div id="keybindings-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Nastavení klávesových zkratek</h3>
+        <button class="close-btn" onclick="closeKeybindingsModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-info">Klikni na tlačítko akce a stiskni novou klávesu na klávesnici pro přiřazení.</p>
+        <div class="kb-row">
+          <label>Otočit kartičku:</label>
+          <button id="kb-flip" class="kb-bind-btn" onclick="recordKey('flip')">Mezerník</button>
+        </div>
+        <div class="kb-row">
+          <label>Další kartička:</label>
+          <button id="kb-next" class="kb-bind-btn" onclick="recordKey('next')">Šipka dolů</button>
+        </div>
+        <div class="kb-row">
+          <label>Předchozí kartička:</label>
+          <button id="kb-prev" class="kb-bind-btn" onclick="recordKey('prev')">Šipka nahoru</button>
+        </div>
+        <div class="kb-row">
+          <label>Umím (odhodit vpravo):</label>
+          <button id="kb-know" class="kb-bind-btn" onclick="recordKey('know')">Šipka vpravo</button>
+        </div>
+        <div class="kb-row">
+          <label>Neumím (odhodit vlevo):</label>
+          <button id="kb-dontknow" class="kb-bind-btn" onclick="recordKey('dontknow')">Šipka vlevo</button>
+        </div>
+        <div class="kb-row">
+          <label>Označit hvězdičkou:</label>
+          <button id="kb-star" class="kb-bind-btn" onclick="recordKey('star')">S</button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="resetKeybindings()">Výchozí</button>
+        <button class="btn btn-primary" onclick="closeKeybindingsModal()">Zavřít</button>
+      </div>
+    </div>
+  </div>
 
   <script src="js/words.js" defer></script>
   <script src="js/app.js" defer></script>
