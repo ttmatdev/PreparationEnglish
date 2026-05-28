@@ -12,6 +12,7 @@
   --success: #10b981;
   --error: #ef4444;
   --star: #eab308;
+  --star-write: #38bdf8;
 }
 
 * {
@@ -816,6 +817,68 @@ main {
   text-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
 }
 
+/* Mistakes List on Results Screen */
+.wrongs-container {
+  margin: 20px 0;
+  text-align: left;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.wrongs-container::-webkit-scrollbar {
+  width: 6px;
+}
+.wrongs-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+.wrongs-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+.wrongs-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.wrongs-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+}
+
+.wrong-item {
+  border-bottom: 1px solid var(--border);
+  padding: 10px 0;
+}
+
+.wrong-item:last-child {
+  border-bottom: none;
+}
+
+.wrong-item-prompt {
+  font-weight: 700;
+  color: #ffffff;
+  font-size: 0.95rem;
+  margin-bottom: 4px;
+}
+
+.wrong-item-user {
+  font-size: 0.85rem;
+  color: var(--error);
+  margin-bottom: 2px;
+}
+
+.wrong-item-correct {
+  font-size: 0.85rem;
+  color: var(--success);
+}
+
 /* WRITE */
 #write-area {
   max-width: 560px;
@@ -826,11 +889,21 @@ main {
 }
 
 .write-card {
+  position: relative;
   background: var(--surface);
   border-radius: 12px;
   padding: 24px;
   border: 1px solid var(--border);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+.write-card .card-star-btn:hover {
+  color: var(--star-write);
+}
+
+.write-card .card-star-btn.active {
+  color: var(--star-write);
+  text-shadow: 0 0 8px rgba(56, 189, 248, 0.4);
 }
 
 @media(min-width:520px) {
@@ -1104,6 +1177,30 @@ main {
 
 .browse-star-btn.active {
   color: var(--star);
+}
+
+.browse-star-write-btn {
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+}
+
+.browse-star-write-btn:hover {
+  color: var(--star-write);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.browse-star-write-btn.active {
+  color: var(--star-write);
 }
 
 /* Toggle switch */

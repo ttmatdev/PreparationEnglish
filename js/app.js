@@ -12,13 +12,15 @@ let disabled = new Set(LS.get('voc_disabled', []));
 function saveDisabled() { LS.set('voc_disabled', [...disabled]); }
 let starred = new Set(LS.get('voc_starred', []));
 function saveStarred() { LS.set('voc_starred', [...starred]); }
+let writeStarred = new Set(LS.get('voc_write_starred', []));
+function saveWriteStarred() { LS.set('voc_write_starred', [...writeStarred]); }
 let knownStatus = LS.get('voc_known_status', {});
 function saveKnownStatus() { LS.set('voc_known_status', knownStatus); }
 
-function activeWords(unit) {
+function activeWords(unit, isWrite = false) {
   let pool;
   if (unit === 'starred') {
-    pool = WORDS.filter(w => starred.has(w.term));
+    pool = WORDS.filter(w => isWrite ? writeStarred.has(w.term) : starred.has(w.term));
   } else if (unit === 'unknown') {
     pool = WORDS.filter(w => knownStatus[w.term] === false);
   } else if (unit === 'known') {
@@ -346,15 +348,31 @@ function updateSess() {
 // ════════════════════════════════════════════════
 // WRITE  — persist: unit, dir, order, index
 // ════════════════════════════════════════════════
+// WRITE  — persist: unit, dir, order, index, score, wrongs
+// ════════════════════════════════════════════════
 let writeCards = [], writeIndex = 0, writeDir = 'en';
+let writeScore = 0;
+let writeWrongs = [];
 
 function saveWriteState() {
-  LS.set('write', { unit: document.getElementById('write-unit').value, dir: writeDir, order: wordsToIndices(writeCards), idx: writeIndex });
+  LS.set('write', { 
+    unit: document.getElementById('write-unit').value, 
+    dir: writeDir, 
+    order: wordsToIndices(writeCards), 
+    idx: writeIndex,
+    score: writeScore,
+    wrongs: writeWrongs
+  });
 }
 
 function startWrite() {
-  writeCards = shuffle(activeWords(document.getElementById('write-unit').value));
-  writeIndex = 0; saveWriteState(); renderWrite(); scrollTop();
+  writeCards = shuffle(activeWords(document.getElementById('write-unit').value, true));
+  writeIndex = 0;
+  writeScore = 0;
+  writeWrongs = [];
+  saveWriteState();
+  renderWrite();
+  scrollTop();
 }
 
 function setWriteDir(dir) {
@@ -375,32 +393,133 @@ function restoreOrStartWrite() {
       document.getElementById('wdir-cz').classList.toggle('active', s.dir === 'cz');
     }
     const restored = indicesToWords(s.order || []);
-    const fresh = activeWords(uEl.value);
+    const fresh = activeWords(uEl.value, true);
     const resTerms = new Set(restored.map(w => w.term));
     const freshTerms = new Set(fresh.map(w => w.term));
     const samePool = [...resTerms].every(t => freshTerms.has(t)) && resTerms.size === freshTerms.size;
     if (samePool && restored.length && (s.idx || 0) < restored.length) {
-      writeCards = restored; writeIndex = s.idx || 0;
-    } else { writeCards = shuffle(fresh); writeIndex = 0; }
-  } else { writeCards = shuffle(activeWords('all')); writeIndex = 0; }
+      writeCards = restored; 
+      writeIndex = s.idx || 0;
+      writeScore = s.score || 0;
+      writeWrongs = s.wrongs || [];
+    } else { 
+      writeCards = shuffle(fresh); 
+      writeIndex = 0; 
+      writeScore = 0;
+      writeWrongs = [];
+    }
+  } else { 
+    writeCards = shuffle(activeWords('all', true)); 
+    writeIndex = 0; 
+    writeScore = 0;
+    writeWrongs = [];
+  }
   renderWrite();
 }
 
 function renderWrite() {
   const area = document.getElementById('write-area');
   if (!writeCards.length) { area.innerHTML = '<p style="color:var(--text-muted)">Žádná aktivní slovíčka.</p>'; return; }
+  
   if (writeIndex >= writeCards.length) {
-    area.innerHTML = `<div class="quiz-result"><h2>Hotovo! ✍️</h2><p style="color:var(--text-muted);margin-bottom:18px">Prošel(la) jsi všechna slovíčka.</p><button class="btn btn-primary" onclick="startWrite()">Znovu</button></div>`;
-    LS.set('write', null); scrollTop(); return;
+    const pct = writeCards.length ? Math.round(writeScore / writeCards.length * 100) : 0;
+    
+    let wrongsHtml = '';
+    if (writeWrongs.length > 0) {
+      wrongsHtml = `
+        <div class="wrongs-container">
+          <div class="wrongs-title">Chybná slovíčka (${writeWrongs.length}):</div>
+          ${writeWrongs.map(w => `
+            <div class="wrong-item">
+              <div class="wrong-item-prompt">${w.prompt}</div>
+              <div class="wrong-item-user">Tvůj překlad: <em>${w.userAns ? w.userAns : '[vynecháno]'}</em></div>
+              <div class="wrong-item-correct">Správně: <strong>${w.correct}</strong></div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    } else {
+      wrongsHtml = `<p style="color:var(--success); font-weight:700; margin: 15px 0;">🎉 Bez chyb! Skvělá práce!</p>`;
+    }
+
+    area.innerHTML = `<div class="quiz-result">
+      <h2>${pct >= 90 ? '🎉 Excelentní!' : pct >= 70 ? '💪 Dobrá práce!' : pct >= 50 ? '👍 Slušné!' : '🧐 Chce to ještě procvičovat!'}</h2>
+      <p style="color:var(--text-muted)">Tvůj výsledek v psaní</p>
+      <span class="score-big">${writeScore}/${writeCards.length}</span>
+      <p style="color:var(--text-muted);margin-bottom:18px">${pct}% správně</p>
+      
+      ${wrongsHtml}
+      
+      <div style="display: flex; gap: 12px; justify-content: center; margin-top: 20px;">
+        <button class="btn btn-primary" onclick="startWrite()">Zkusit znovu</button>
+        ${writeWrongs.length > 0 ? `<button class="btn btn-outline" id="star-wrongs-btn" onclick="starAllWriteWrongs()">⭐️ Označit chyby</button>` : ''}
+      </div>
+    </div>`;
+    
+    LS.set('write', null); 
+    scrollTop(); 
+    return;
   }
+  
   const w = writeCards[writeIndex]; const isEn = writeDir === 'en';
-  area.innerHTML = `<div class="write-card"><div class="write-question">${isEn ? 'Přeloď do češtiny' : 'Přeloď do angličtiny'} &nbsp;(${writeIndex + 1}/${writeCards.length})</div><div class="write-term">${isEn ? w.term : w.tr}</div><div class="write-hint">${w.def}</div><input class="write-input" id="write-inp" type="text" placeholder="${isEn ? 'Napiš český překlad...' : 'Napiš anglický termín...'}" autocomplete="off" onkeydown="if(event.key==='Enter')checkWrite()"><div class="write-feedback" id="write-fb"></div></div>
+  const isStar = writeStarred.has(w.term);
+  area.innerHTML = `<div class="write-card" style="position: relative;">
+    <button type="button" class="card-star-btn${isStar ? ' active' : ''}" onclick="toggleWriteStarredCurrent(event)" title="Označit hvězdičkou (psaní)">${isStar ? '★' : '☆'}</button>
+    <div class="write-question">${isEn ? 'Přeloď do češtiny' : 'Přeloď do angličtiny'} &nbsp;(${writeIndex + 1}/${writeCards.length})</div>
+    <div class="write-term">${isEn ? w.term : w.tr}</div>
+    <div class="write-hint">${w.def}</div>
+    <input class="write-input" id="write-inp" type="text" placeholder="${isEn ? 'Napiš český překlad...' : 'Napiš anglický termín...'}" autocomplete="off" onkeydown="if(event.key==='Enter')checkWrite()">
+    <div class="write-feedback" id="write-fb"></div>
+  </div>
 
 <div class="fixed-bottom-bar" id="write-controls">
   <button class="btn btn-primary shadow-btn" onclick="checkWrite()">Zkontrolovat</button>
   <button class="btn btn-outline bg-glass" onclick="skipWrite()">Přeskočit</button>
 </div>`;
   setTimeout(() => { try { document.getElementById('write-inp').focus(); } catch (e) { } }, 80);
+}
+
+function starAllWriteWrongs() {
+  if (!writeWrongs || !writeWrongs.length) return;
+  writeWrongs.forEach(w => {
+    writeStarred.add(w.term);
+  });
+  saveWriteStarred();
+  const btn = document.getElementById('star-wrongs-btn');
+  if (btn) {
+    btn.innerHTML = '✓ Označeno! ✍️';
+    btn.disabled = true;
+    btn.classList.add('active');
+  }
+}
+
+function toggleWriteStarredCurrent(event) {
+  if (event) event.stopPropagation();
+  if (!writeCards.length || writeIndex >= writeCards.length) return;
+  const w = writeCards[writeIndex];
+  if (writeStarred.has(w.term)) {
+    writeStarred.delete(w.term);
+  } else {
+    writeStarred.add(w.term);
+  }
+  saveWriteStarred();
+  const isStar = writeStarred.has(w.term);
+  const btn = document.querySelector('.write-card .card-star-btn');
+  if (btn) {
+    btn.innerHTML = isStar ? '★' : '☆';
+    btn.classList.toggle('active', isStar);
+  }
+  const filter = document.getElementById('write-unit').value;
+  if (filter === 'starred' && !isStar) {
+    writeCards.splice(writeIndex, 1);
+    if (writeCards.length === 0) {
+      writeIndex = 0;
+    } else {
+      writeIndex = writeIndex % writeCards.length;
+    }
+    saveWriteState();
+    renderWrite();
+  }
 }
 
 function checkWrite() {
@@ -411,17 +530,68 @@ function checkWrite() {
   const correctRaw = isEn ? w.tr : w.term;
   const correct = correctRaw.toLowerCase();
 
-  // Split correct answer into all valid variants (by comma, semicolon, slash)
-  const variants = correct.split(/[,;\/]/).map(v => v.trim()).filter(v => v.length > 0);
+  // Step 1: Split on full-variant separators:
+  //   " / " – spaced slash (English multi-term like "CEO / Managing Director")
+  //   ";"   – semicolon (separates numbered definitions)
+  //   ","   – comma (alternative Czech translations)
+  const rawVariants = correct.split(/ \/ |[;,]/).map(v => v.trim()).filter(v => v.length > 0);
 
-  // Accept if user's answer exactly matches any complete variant
-  const ok = variants.some(v => userAns === v);
+  // Step 2: For each raw variant:
+  //   a) Strip leading number prefix like "1. " or "2. " (from numbered tr values)
+  //   b) Expand unspaced slashes (word-level alternatives in Czech):
+  //      "vedoucí skupiny/týmu/štábu" → ["vedoucí skupiny","vedoucí týmu","vedoucí štábu"]
+  const variants = [];
+  for (let v of rawVariants) {
+    const stripped = v.replace(/^\d+\.\s*/, '').trim();
+    if (!stripped) continue;
+    if (stripped.includes('/')) {
+      const words = stripped.split(' ');
+      const si = words.findIndex(word => word.includes('/'));
+      if (si !== -1) {
+        const pre = words.slice(0, si);
+        const suf = words.slice(si + 1);
+        for (const alt of words[si].split('/')) {
+          const expanded = [...pre, alt, ...suf].join(' ').trim();
+          if (expanded) variants.push(expanded);
+        }
+        continue;
+      }
+    }
+    variants.push(stripped);
+  }
+
+  const ok = variants.length > 0 && variants.some(v => userAns === v);
   inp.classList.add(ok ? 'correct-input' : 'wrong-input');
   fb.className = 'write-feedback ' + (ok ? 'correct' : 'wrong') + ' show';
   fb.innerHTML = ok ? `✓ Správně! <em>${correctRaw}</em>` : `✗ Správná odpověď: <em>${correctRaw}</em>`;
+  
+  if (ok) {
+    writeScore++;
+  } else {
+    writeWrongs.push({
+      term: w.term,
+      tr: w.tr,
+      userAns: inp.value.trim(),
+      correct: correctRaw,
+      prompt: isEn ? w.term : w.tr
+    });
+  }
+  
   setTimeout(() => { writeIndex++; saveWriteState(); renderWrite(); scrollTop(); }, 1600);
 }
-function skipWrite() { writeIndex++; saveWriteState(); renderWrite(); scrollTop(); }
+function skipWrite() {
+  if (writeIndex >= writeCards.length) return;
+  const w = writeCards[writeIndex];
+  const isEn = writeDir === 'en';
+  writeWrongs.push({
+    term: w.term,
+    tr: w.tr,
+    userAns: '',
+    correct: isEn ? w.tr : w.term,
+    prompt: isEn ? w.term : w.tr
+  });
+  writeIndex++; saveWriteState(); renderWrite(); scrollTop();
+}
 
 // ════════════════════════════════════════════════
 // MATCHING  — no persistent progress (game resets each time)
@@ -500,6 +670,18 @@ function toggleStarredBrowse(term, btn) {
   updateCounts();
 }
 
+function toggleStarredWriteBrowse(term, btn) {
+  if (writeStarred.has(term)) {
+    writeStarred.delete(term);
+  } else {
+    writeStarred.add(term);
+  }
+  saveWriteStarred();
+  const isStarred = writeStarred.has(term);
+  btn.innerHTML = isStarred ? '★' : '☆';
+  btn.classList.toggle('active', isStarred);
+}
+
 function renderBrowse() {
   const search = document.getElementById('browse-search').value.toLowerCase();
   const unit = document.getElementById('browse-unit').value;
@@ -507,6 +689,8 @@ function renderBrowse() {
   let pool;
   if (unit === 'starred') {
     pool = WORDS.filter(w => starred.has(w.term));
+  } else if (unit === 'write_starred') {
+    pool = WORDS.filter(w => writeStarred.has(w.term));
   } else if (unit === 'unknown') {
     pool = WORDS.filter(w => knownStatus[w.term] === false);
   } else if (unit === 'known') {
@@ -521,10 +705,12 @@ function renderBrowse() {
   document.getElementById('browse-grid').innerHTML = pool.map(w => {
     const dis = disabled.has(w.term);
     const isStar = starred.has(w.term);
+    const isWriteStar = writeStarred.has(w.term);
     const safe = w.term.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
     return `<div class="browse-card${dis ? ' disabled-word' : ''}">
   <div class="browse-actions">
-    <button class="browse-star-btn${isStar ? ' active' : ''}" onclick="toggleStarredBrowse('${safe}',this)" title="Označit hvězdičkou">${isStar ? '★' : '☆'}</button>
+    <button class="browse-star-btn${isStar ? ' active' : ''}" onclick="toggleStarredBrowse('${safe}',this)" title="Označit hvězdičkou (kartičky)">${isStar ? '★' : '☆'}</button>
+    <button class="browse-star-write-btn${isWriteStar ? ' active' : ''}" onclick="toggleStarredWriteBrowse('${safe}',this)" title="Označit hvězdičkou (psaní)">${isWriteStar ? '★' : '☆'}</button>
     <label class="toggle-switch" title="${dis ? 'Zapnout' : 'Vypnout'}"><input type="checkbox" ${dis ? '' : 'checked'} onchange="toggleWord('${safe}',this)"><span class="toggle-slider"></span></label>
   </div>
   <div class="browse-unit-tag">${w.unit}</div>
