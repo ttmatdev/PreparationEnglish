@@ -529,16 +529,30 @@ main {
   text-align: center;
   border: 1px solid var(--border);
   box-shadow: 0 12px 35px rgba(0, 0, 0, 0.35);
-  transition: border-color .3s, box-shadow .3s;
+  transition: border-color .3s, box-shadow .3s, opacity .4s, visibility .4s;
 }
 
 .flashcard-front {
   background: linear-gradient(135deg, var(--surface) 0%, rgba(24, 27, 38, 0.9) 100%);
+  opacity: 1;
+  visibility: visible;
 }
 
 .flashcard-back {
   background: linear-gradient(135deg, var(--surface2) 0%, rgba(17, 19, 26, 0.9) 100%);
   transform: rotateY(180deg);
+  opacity: 0;
+  visibility: hidden;
+}
+
+.flashcard-scene.flipped .flashcard-front {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.flashcard-scene.flipped .flashcard-back {
+  opacity: 1;
+  visibility: visible;
 }
 
 .flashcard-scene:hover .flashcard-front,
