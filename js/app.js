@@ -146,12 +146,12 @@ function renderFlashcard() {
   document.getElementById('fc-unit-badge').textContent = w.unit;
   const t = w.term.replace(/\s*\([nvadj]+\)/g, '');
   // Format text: insert line break before each numbered definition (2., 3., 4. ...)
+  // but NOT when preceded by a comma (e.g. "1., 2. akcie" means both share a translation)
   function fmtText(str) {
     if (!str) return '';
-    // Escape HTML
     const esc = str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    // Insert <br> before "2. ", "3. ", etc. (but not the first "1. ")
-    return esc.replace(/ (\d+\.) /g, (m, n) => n === '1.' ? m : '<br>' + n + ' ');
+    // Only break before a number when NOT preceded by comma (lookbehind (?<!,))
+    return esc.replace(/(?<!,) (\d+\.) /g, (m, n) => n === '1.' ? m : '<br>' + n + ' ');
   }
   function setField(id, str) {
     const el = document.getElementById(id);
@@ -407,9 +407,15 @@ function checkWrite() {
   const inp = document.getElementById('write-inp'); const fb = document.getElementById('write-fb');
   if (!inp || inp.dataset.checked) return; inp.dataset.checked = '1';
   const w = writeCards[writeIndex]; const isEn = writeDir === 'en';
-  const userAns = inp.value.trim().toLowerCase(); const correctRaw = isEn ? w.tr : w.term; const correct = correctRaw.toLowerCase();
-  const first = correct.split(',')[0].split(';')[0].trim();
-  const ok = userAns === correct || userAns === first || (correct.includes(userAns) && userAns.length > 3);
+  const userAns = inp.value.trim().toLowerCase();
+  const correctRaw = isEn ? w.tr : w.term;
+  const correct = correctRaw.toLowerCase();
+
+  // Split correct answer into all valid variants (by comma, semicolon, slash)
+  const variants = correct.split(/[,;\/]/).map(v => v.trim()).filter(v => v.length > 0);
+
+  // Accept if user's answer exactly matches any complete variant
+  const ok = variants.some(v => userAns === v);
   inp.classList.add(ok ? 'correct-input' : 'wrong-input');
   fb.className = 'write-feedback ' + (ok ? 'correct' : 'wrong') + ' show';
   fb.innerHTML = ok ? `✓ Správně! <em>${correctRaw}</em>` : `✗ Správná odpověď: <em>${correctRaw}</em>`;
