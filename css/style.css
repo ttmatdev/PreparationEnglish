@@ -1246,6 +1246,12 @@ main {
   border: 1px solid rgba(239, 68, 68, 0.18);
 }
 
+.card-status-badge.repeat-badge {
+  background: rgba(99, 102, 241, 0.08);
+  color: #a5b4fc;
+  border: 1px solid rgba(99, 102, 241, 0.18);
+}
+
 .card-status-badge.new {
   background: rgba(255, 255, 255, 0.03);
   color: var(--text-muted);

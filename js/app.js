@@ -629,7 +629,9 @@ function swipeCard(direction) {
 
   scene.addEventListener('touchend', () => {
     if (isSwiping) return;
-    if (Math.abs(deltaX) > 100) {
+    if (deltaY < -100 && Math.abs(deltaX) < 100) {
+      swipeCard('up');
+    } else if (Math.abs(deltaX) > 100) {
       swipeCard(deltaX > 0 ? 'right' : 'left');
     } else {
       scene.style.transition = 'transform 0.3s ease';
@@ -646,10 +648,15 @@ function swipeCard(direction) {
     prev: { code: 'ArrowUp', label: 'Šipka nahoru' },
     know: { code: 'ArrowRight', label: 'Šipka vpravo' },
     dontknow: { code: 'ArrowLeft', label: 'Šipka vlevo' },
+    repeat: { code: 'KeyR', label: 'R' },
     star: { code: 'KeyS', label: 'S' }
   };
 
   let keys = LS.get('voc_keys', DEFAULT_KEYS);
+  // Ensure backwards compatibility with older saved key bindings
+  for (const k of Object.keys(DEFAULT_KEYS)) {
+    if (!keys[k]) keys[k] = DEFAULT_KEYS[k];
+  }
   let activeRecordingAction = null;
 
   window.openKeybindingsModal = function() {
@@ -776,6 +783,9 @@ function swipeCard(direction) {
       } else if (code === keys.dontknow.code) {
         e.preventDefault();
         swipeCard('left');
+      } else if (code === keys.repeat.code) {
+        e.preventDefault();
+        swipeCard('up');
       } else if (code === keys.star.code) {
         e.preventDefault();
         toggleStarredCurrent();
