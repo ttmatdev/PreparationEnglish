@@ -429,13 +429,20 @@ function renderWrite() {
       wrongsHtml = `
         <div class="wrongs-container">
           <div class="wrongs-title">Chybná slovíčka (${writeWrongs.length}):</div>
-          ${writeWrongs.map(w => `
-            <div class="wrong-item">
-              <div class="wrong-item-prompt">${w.prompt}</div>
-              <div class="wrong-item-user">Tvůj překlad: <em>${w.userAns ? w.userAns : '[vynecháno]'}</em></div>
-              <div class="wrong-item-correct">Správně: <strong>${w.correct}</strong></div>
-            </div>
-          `).join('')}
+          ${writeWrongs.map(w => {
+            const isStar = writeStarred.has(w.term);
+            const safeTerm = w.term.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+            return `
+              <div class="wrong-item" style="display: flex; justify-content: space-between; align-items: center; gap: 12px;">
+                <div style="flex: 1;">
+                  <div class="wrong-item-prompt">${w.prompt}</div>
+                  <div class="wrong-item-user">Tvůj překlad: <em>${w.userAns ? w.userAns : '[vynecháno]'}</em></div>
+                  <div class="wrong-item-correct">Správně: <strong>${w.correct}</strong></div>
+                </div>
+                <button type="button" class="wrong-star-btn${isStar ? ' active' : ''}" onclick="toggleWriteStarredFromResults('${safeTerm}', this)" title="Označit hvězdičkou (psaní)">${isStar ? '★' : '☆'}</button>
+              </div>
+            `;
+          }).join('')}
         </div>
       `;
     } else {
@@ -491,6 +498,22 @@ function starAllWriteWrongs() {
     btn.disabled = true;
     btn.classList.add('active');
   }
+  document.querySelectorAll('.wrong-star-btn').forEach(b => {
+    b.innerHTML = '★';
+    b.classList.add('active');
+  });
+}
+
+function toggleWriteStarredFromResults(term, btn) {
+  if (writeStarred.has(term)) {
+    writeStarred.delete(term);
+  } else {
+    writeStarred.add(term);
+  }
+  saveWriteStarred();
+  const isStar = writeStarred.has(term);
+  btn.innerHTML = isStar ? '★' : '☆';
+  btn.classList.toggle('active', isStar);
 }
 
 function toggleWriteStarredCurrent(event) {

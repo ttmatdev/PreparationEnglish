@@ -879,6 +879,33 @@ main {
   color: var(--success);
 }
 
+.wrong-star-btn {
+  background: transparent;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.wrong-star-btn:hover {
+  color: var(--star-write);
+  background: rgba(255, 255, 255, 0.05);
+  transform: scale(1.1);
+}
+
+.wrong-star-btn.active {
+  color: var(--star-write);
+  text-shadow: 0 0 8px rgba(56, 189, 248, 0.4);
+}
+
 /* WRITE */
 #write-area {
   max-width: 560px;
