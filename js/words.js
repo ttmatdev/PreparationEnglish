@@ -220,6 +220,7 @@ const WORDS = [
   { term: "Poverty gap", def: "The difference between the total population and those living in poverty (or the difference between rich and poor).", tr: "míra chudoby", unit: "Trade" },
   { term: "Protectionism", def: "Government actions and policies that restrict international trade.", tr: "protekcionismus, ochranářství", unit: "Trade" },
   { term: "Quota", def: "The number of goods and services that can be imported or exported during a particular time period, according to a government-imposed trade restriction that limits this.", tr: "kvóta", unit: "Trade" },
+  { term: "Quote", def: "A statement of how much a job or service will cost; a price estimation.", tr: "cenová nabídka, kalkulace ceny", unit: "Trade" },
   { term: "Red tape", def: "An idiom referring to official rules that seem unnecessary and prevent things from being done quickly and easily.", tr: "byrokracie, 'úřední šiml'", unit: "Trade" },
   { term: "Self-sufficient", def: "Not requiring any help, support or interaction for survival; a self-sufficient economy does not trade with the outside world.", tr: "soběstačný", unit: "Trade" },
   { term: "Specialisation", def: "A method of production where a business or area focuses on the production of a limited scope of products or services in order to gain greater degrees of productive efficiency.", tr: "specializace", unit: "Trade" },
