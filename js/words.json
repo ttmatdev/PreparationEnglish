@@ -1686,49 +1686,49 @@
     "unit": "Primát"
   },
   {
-    "term": "↑ Soar / Rocket / Surge",
+    "term": "Soar / Rocket / Surge",
     "def": "Rise sharply and suddenly",
     "tr": "prudce vystřelit / vzrůst",
     "unit": "Primát"
   },
   {
-    "term": "↑ Increase / Rise / Grow",
+    "term": "Increase / Rise / Grow",
     "def": "Go up (general, gradual)",
     "tr": "zvýšit / stoupat / růst",
     "unit": "Primát"
   },
   {
-    "term": "↑ Jump",
+    "term": "Jump",
     "def": "A sudden increase",
     "tr": "vyskočit",
     "unit": "Primát"
   },
   {
-    "term": "↓ Plummet / Slump",
+    "term": "Plummet / Slump",
     "def": "Fall sharply and suddenly",
     "tr": "zřítit se / propadnout",
     "unit": "Primát"
   },
   {
-    "term": "↓ Decline / Decrease / Fall",
+    "term": "Decline / Decrease / Fall",
     "def": "Go down (general, gradual)",
     "tr": "klesat / snižovat",
     "unit": "Primát"
   },
   {
-    "term": "↓ Slide / Sink",
+    "term": "Slide / Sink",
     "def": "Slip downward gradually or significantly",
     "tr": "sklouznout / klesat",
     "unit": "Primát"
   },
   {
-    "term": "↔ Level off",
+    "term": "Level off",
     "def": "Stabilise after rising or falling",
     "tr": "ustálit se",
     "unit": "Primát"
   },
   {
-    "term": "↔ Remain steady/constant",
+    "term": "Remain steady/constant",
     "def": "Stay the same, no change",
     "tr": "zůstat beze změny",
     "unit": "Primát"
@@ -1878,66 +1878,6 @@
     "unit": "Primát"
   },
   {
-    "term": "and",
-    "def": "Connects two similar ideas",
-    "tr": "a",
-    "unit": "Primát"
-  },
-  {
-    "term": "but / however",
-    "def": "Contrasts two ideas",
-    "tr": "ale / nicméně",
-    "unit": "Primát"
-  },
-  {
-    "term": "moreover / furthermore",
-    "def": "Adds more information",
-    "tr": "navíc / kromě toho",
-    "unit": "Primát"
-  },
-  {
-    "term": "although / even though",
-    "def": "Despite something",
-    "tr": "ačkoliv / přestože",
-    "unit": "Primát"
-  },
-  {
-    "term": "whether",
-    "def": "Introduces alternatives",
-    "tr": "zda / ať",
-    "unit": "Primát"
-  },
-  {
-    "term": "therefore / thus",
-    "def": "Shows result",
-    "tr": "proto / tudíž",
-    "unit": "Primát"
-  },
-  {
-    "term": "meanwhile / additionally",
-    "def": "At the same time / also",
-    "tr": "mezitím / navíc",
-    "unit": "Primát"
-  },
-  {
-    "term": "finally / lastly",
-    "def": "The last point",
-    "tr": "nakonec",
-    "unit": "Primát"
-  },
-  {
-    "term": "such as / like",
-    "def": "Gives examples",
-    "tr": "jako například",
-    "unit": "Primát"
-  },
-  {
-    "term": "in order to",
-    "def": "Shows purpose",
-    "tr": "aby, za účelem",
-    "unit": "Primát"
-  },
-  {
     "term": "rely ON",
     "def": "to depend on something",
     "tr": "spoléhat na",
@@ -2013,60 +1953,6 @@
     "term": "due TO",
     "def": "because of",
     "tr": "kvůli",
-    "unit": "Primát"
-  },
-  {
-    "term": "Verb → Noun: -tion/-sion",
-    "def": "tax → taxation, promote → promotion",
-    "tr": "",
-    "unit": "Primát"
-  },
-  {
-    "term": "Verb → Noun: -ment",
-    "def": "govern → government, manage → management",
-    "tr": "",
-    "unit": "Primát"
-  },
-  {
-    "term": "Verb → Noun: -ance/-ence",
-    "def": "perform → performance, confide → confidence",
-    "tr": "",
-    "unit": "Primát"
-  },
-  {
-    "term": "Adj → Noun: -ness / -ity",
-    "def": "aware → awareness, liquid → liquidity",
-    "tr": "",
-    "unit": "Primát"
-  },
-  {
-    "term": "Verb → Adj: -ive/-ative",
-    "def": "effect → effective, compete → competitive",
-    "tr": "",
-    "unit": "Primát"
-  },
-  {
-    "term": "Verb → Adj: -able/-ible",
-    "def": "rely → reliable, comprehend → comprehensive",
-    "tr": "",
-    "unit": "Primát"
-  },
-  {
-    "term": "Adj → Adv: -ly",
-    "def": "considerable → considerably, successful → successfully",
-    "tr": "",
-    "unit": "Primát"
-  },
-  {
-    "term": "Negative: un-",
-    "def": "successful → unsuccessful, employment → unemployment",
-    "tr": "",
-    "unit": "Primát"
-  },
-  {
-    "term": "Negative: mis-",
-    "def": "management → mismanagement, understand → misunderstanding",
-    "tr": "",
     "unit": "Primát"
   }
 ]
