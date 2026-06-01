@@ -1428,18 +1428,6 @@
     "unit": "Primát"
   },
   {
-    "term": "Above the line",
-    "def": "Mass advertising aimed at a wide audience (TV, billboards)",
-    "tr": "nadlinková reklama",
-    "unit": "Primát"
-  },
-  {
-    "term": "Below the line",
-    "def": "More targeted advertising (email, discount coupons)",
-    "tr": "podlinková reklama",
-    "unit": "Primát"
-  },
-  {
     "term": "CSR",
     "def": "Corporate Social Responsibility – ethical operations + positive societal impact",
     "tr": "společenská odpovědnost firem",
@@ -1455,12 +1443,6 @@
     "term": "Retailer",
     "def": "A company that sells goods directly to final customers",
     "tr": "maloobchodník",
-    "unit": "Primát"
-  },
-  {
-    "term": "Current account",
-    "def": "A bank account for everyday transactions, comes with a debit card",
-    "tr": "běžný účet",
     "unit": "Primát"
   },
   {
@@ -1485,12 +1467,6 @@
     "term": "IPO (flotation)",
     "def": "Initial Public Offering – first time a company sells shares to public",
     "tr": "prvotní veřejná nabídka",
-    "unit": "Primát"
-  },
-  {
-    "term": "Launder money",
-    "def": "To move illegally obtained money through legal businesses",
-    "tr": "prát peníze",
     "unit": "Primát"
   },
   {
@@ -1530,21 +1506,9 @@
     "unit": "Primát"
   },
   {
-    "term": "deposit → deposit",
-    "def": "to put money into an account",
-    "tr": "vložit → vklad",
-    "unit": "Primát"
-  },
-  {
     "term": "earn → earnings",
     "def": "to receive money for work",
     "tr": "vydělat → výdělek",
-    "unit": "Primát"
-  },
-  {
-    "term": "embezzle → embezzlement",
-    "def": "to steal entrusted money",
-    "tr": "zpronevěřit → zpronevěření",
     "unit": "Primát"
   },
   {
@@ -1563,12 +1527,6 @@
     "term": "spend → spending/expenditure",
     "def": "to use money",
     "tr": "utratit → výdaj",
-    "unit": "Primát"
-  },
-  {
-    "term": "withdraw → withdrawal",
-    "def": "to take money out of an account",
-    "tr": "vybrat → výběr",
     "unit": "Primát"
   },
   {
@@ -1620,12 +1578,6 @@
     "unit": "Primát"
   },
   {
-    "term": "VAT",
-    "def": "Value Added Tax – tax on goods at each stage of production",
-    "tr": "DPH",
-    "unit": "Primát"
-  },
-  {
     "term": "Recession",
     "def": "A period of economic decline",
     "tr": "recese",
@@ -1656,27 +1608,9 @@
     "unit": "Primát"
   },
   {
-    "term": "Multinational (MNC)",
-    "def": "An organisation with production in multiple countries",
-    "tr": "nadnárodní korporace",
-    "unit": "Primát"
-  },
-  {
     "term": "Onboarding",
     "def": "The process of integrating a new employee into a company",
     "tr": "zapracování",
-    "unit": "Primát"
-  },
-  {
-    "term": "Performance appraisal",
-    "def": "Evaluation of an employee's work",
-    "tr": "hodnocení výkonu",
-    "unit": "Primát"
-  },
-  {
-    "term": "Covering letter",
-    "def": "A letter sent with a CV providing extra information",
-    "tr": "průvodní / motivační dopis",
     "unit": "Primát"
   },
   {
